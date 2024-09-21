@@ -1,3 +1,4 @@
+import logging
 from collections import deque
 from typing import Callable, Dict, List
 
@@ -9,6 +10,8 @@ StrategyCallback = Dict[str, List[Callback]]
 
 
 class StrategyBase(Strategy):
+
+    logger = logging.getLogger()
 
     def __init__(
         self,
@@ -30,6 +33,8 @@ class StrategyBase(Strategy):
         }
 
         self.register_on_tick_callback(lambda p, _, __: self.data["close"].append(p))
+
+        self.logger.info("Using strategy: %s", self.__class__.__name__)
 
     def init(self, symbol: str, state: StrategyState):
         self.data = state.interface.history(
