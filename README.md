@@ -44,7 +44,7 @@ To get started with QuantiPy, follow these steps:
 3. **Run a strategy backtest:**
 
     ```bash
-    poetry run python run.py --strategy=<strategy> --period=1y --symbol MSFT
+    poetry run python run.py <strategy> <exchange> --symbol MSFT
     ```
 
     - By default `--live` is false to prevent accidental losses
@@ -54,7 +54,10 @@ To get started with QuantiPy, follow these steps:
 
 ## Usage
 
-TBA
+  Simple backtest of Bitcoin on Binance using the Stochastic + RSI + MACD strategy
+  ```bash
+  $ poetry run python run.py StochasticRSIWithRSIAndMACD Binance --symbol BTC-USDT --backtest
+  ```
 
 ## Contributing
 
@@ -69,3 +72,8 @@ This project is licensed under the GNU General Public License v3.0 - see the
 
 Special thanks to the Blankly project for building the backend that makes these
 strategies so simple to implement. It really takes the headache out of it!
+
+## @ToDo:
+
+- Add simple conversion to screener via CLI switch
+- Add more strategies
