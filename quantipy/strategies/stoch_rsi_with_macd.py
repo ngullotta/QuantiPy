@@ -22,11 +22,13 @@ class StochasticRSIWithRSIAndMACD(StrategyBase):
         state.interface.market_order(symbol, side="sell", size=qty)
         self.position_open = False
 
-    def update_indicators(self, *args, **kwargs) -> None:
+    def update_indicators(
+        self, price: float, symbol: str, state: StrategyState
+    ) -> None:
         self.rsi, self.stoch_rsi_K, self.stoch_rsi_D = stochastic_rsi(
-            self.data["close"]
+            self.data[symbol]["close"]
         )
-        self.macd_res, self.macd_sig, self.macd_hist = macd(self.data["close"])
+        self.macd_res, self.macd_sig, self.macd_hist = macd(self.data[symbol]["close"])
 
     def buy(self) -> bool:
         # Both the %K and %D lines must have been below 20 recently

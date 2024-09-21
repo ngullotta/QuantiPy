@@ -1,12 +1,13 @@
 import logging
-from collections import deque
-from typing import Callable, Dict, List
+from collections import defaultdict, deque
+from typing import Callable, Deque, Dict, List
 
 from blankly import Strategy, StrategyState
 from blankly.exchanges.abc_base_exchange import ABCBaseExchange
 
 Callback = Callable[..., None]
 StrategyCallback = Dict[str, List[Callback]]
+CloseHistory = Dict[str, Deque[float]]
 
 
 class StrategyBase(Strategy):
@@ -20,7 +21,7 @@ class StrategyBase(Strategy):
     ) -> None:
         super().__init__(exchange)
         self.default_history = to
-        self.data = deque()
+        self.data: CloseHistory = defaultdict(deque)
 
         self.position_open = False
 
@@ -32,12 +33,16 @@ class StrategyBase(Strategy):
             "take_profit": [],
         }
 
-        self.register_on_tick_callback(lambda p, _, __: self.data["close"].append(p))
+        self.register_on_tick_callback(self.append_price)
 
         self.logger.info("Using strategy: %s", self.__class__.__name__)
 
+    def append_price(self, price: float, symbol: str, state: StrategyState) -> None:
+        self.data[symbol]["close"].append(price)
+        self.logger.debug("Added close price to `%s`'s history: $%.2f", symbol, price)
+
     def init(self, symbol: str, state: StrategyState):
-        self.data = state.interface.history(
+        self.data[symbol] = state.interface.history(
             symbol, to=800, resolution=state.resolution, return_as="deque"
         )
 
