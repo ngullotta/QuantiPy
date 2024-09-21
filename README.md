@@ -61,7 +61,7 @@ To get started with QuantiPy, follow these steps:
 
 ### Example strategy backtesting graph
 
-[See an example backtest output](./StochasticRSIWithRSIAndMACD.html)
+![An example backtest output](./Stoch+RSI+MACD-Backtest.png)
 
 ## Contributing
 

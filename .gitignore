@@ -2,4 +2,3 @@ price_caches
 *.png
 *.html
 __pycache__
-!StochasticRSIWithRSIAndMACD.html
