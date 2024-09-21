@@ -9,15 +9,15 @@ class StochasticRSIWithRSIAndMACD(StrategyBase):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.register_on_tick_callback(self.update_indicators)
-        self.register_on_buy_callback(self._buy)
-        self.register_on_sell_callback(self._sell)
+        self.register_on_buy_callback(self.on_buy)
+        self.register_on_sell_callback(self.on_sell)
 
-    def _buy(self, price: float, symbol: str, state: StrategyState) -> None:
+    def on_buy(self, price: float, symbol: str, state: StrategyState) -> None:
         qty = trunc(state.interface.cash / price, 3)
         state.interface.market_order(symbol, side="buy", size=qty)
         self.position_open = True
 
-    def _sell(self, price: float, symbol: str, state: StrategyState) -> None:
+    def on_sell(self, price: float, symbol: str, state: StrategyState) -> None:
         qty = trunc(state.interface.account[state.base_asset].available, 3)
         state.interface.market_order(symbol, side="sell", size=qty)
         self.position_open = False
@@ -30,7 +30,7 @@ class StochasticRSIWithRSIAndMACD(StrategyBase):
 
     def buy(self) -> bool:
         # Both the %K and %D lines must have been below 20 recently
-        stride = 10
+        stride = 2
         below_20_K = self.stoch_rsi_K < 20
         below_20_D = self.stoch_rsi_D < 20
         both_below_20 = below_20_K & below_20_D
@@ -40,7 +40,7 @@ class StochasticRSIWithRSIAndMACD(StrategyBase):
             return False
 
         # Ensure RSI > 50
-        if float(self.rsi.iloc[-1]) < 50:
+        if self.rsi.iloc[-1] < 50:
             return False
 
         # Check for MACD cross to confirm uptrend
@@ -59,17 +59,17 @@ class StochasticRSIWithRSIAndMACD(StrategyBase):
 
     def sell(self) -> bool:
         # Both the %K and %D lines must have been above 80 recently
-        stride = 10
+        stride = 2
         above_80_K = self.stoch_rsi_K > 80
         above_80_D = self.stoch_rsi_D > 80
-        both_above_20 = above_80_K & above_80_D
-        lookback = both_above_20[-stride:]
+        both_above_80 = above_80_K & above_80_D
+        lookback = both_above_80[-stride:]
         both_above_80_occurred = lookback.any()
         if not both_above_80_occurred:
             return False
 
         # Ensure RSI < 50
-        if float(self.rsi.iloc[-1]) > 50:
+        if self.rsi.iloc[-1] > 50:
             return False
 
         # Check for MACD cross to confirm downtrend
