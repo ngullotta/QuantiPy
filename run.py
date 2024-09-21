@@ -1,14 +1,28 @@
+import logging
 from argparse import ArgumentParser
 
 from blankly import Binance, PaperTrade
 
+from quantipy.logger import QuantiPyLogger
 from quantipy.strategies import StochasticRSIWithRSIAndMACD
 
 STRATEGIES = {"StochasticRSIWithRSIAndMACD": StochasticRSIWithRSIAndMACD}
 EXCHANGES = {"Binance": Binance, "PaperTrade": PaperTrade}
 
 
+def setupLogger():
+    logger = logging.getLogger()
+    console = logging.StreamHandler()
+    formatter = QuantiPyLogger()
+    console.setFormatter(formatter)
+    console.setLevel(logging.DEBUG)
+    logger.addHandler(console)
+    logger.setLevel(logging.DEBUG)
+
+
 def main():
+    setupLogger()
+
     parser = ArgumentParser(
         description="""
         CLI tool to start the trading bot.
@@ -77,6 +91,10 @@ def main():
         action="store_true",
         default=False,
         help='Use the strategy in "Screener" mode',
+    )
+
+    parser.add_argument(
+        "-l", "--log-level", type=logging.getLogger().setLevel, default="INFO"
     )
 
     args = parser.parse_args()
