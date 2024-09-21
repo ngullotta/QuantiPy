@@ -1,4 +1,6 @@
+import json
 import logging
+import warnings
 from argparse import ArgumentParser
 
 from blankly import Binance, PaperTrade
@@ -121,10 +123,17 @@ def main():
         )
 
     if args.backtest:
-        strategy.backtest(to=args.to, initial_values=initial)
+        with warnings.catch_warnings():
+            logger = logging.getLogger()
+            warnings.simplefilter("ignore")
+            res = strategy.backtest(to=args.to, initial_values=initial)
+            with open(f"{args.strategy.__name__}_results.json", "w") as fp:
+                json.dump(res.to_dict(), fp, indent=4)
+                logger.info("Wrote backtest results to `%s`", fp.name)
         exit()
 
     strategy.start()
+
 
 if __name__ == "__main__":
     main()
