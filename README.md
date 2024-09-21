@@ -59,6 +59,10 @@ To get started with QuantiPy, follow these steps:
   $ poetry run python run.py StochasticRSIWithRSIAndMACD Binance --symbol BTC-USDT --backtest
   ```
 
+### Example strategy backtesting graph
+
+[See an example backtest output](./StochasticRSIWithRSIAndMACD.html)
+
 ## Contributing
 
 Contributions are welcome! Please read the contributing guidelines for more details.
