@@ -2,13 +2,15 @@
     "binance": {
         "live": {
             "API_KEY": "",
-            "API_SECRET": ""
+            "API_SECRET": "",
+            "sandbox": false
         }
     },
     "alpaca": {
         "live": {
             "API_KEY": "",
-            "API_SECRET": ""
+            "API_SECRET": "",
+            "sandbox": false
         },
         "paper": {}
     }
