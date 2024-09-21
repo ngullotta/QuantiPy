@@ -1,3 +1,4 @@
+from collections import deque
 from typing import Callable, Dict, List
 
 from blankly import Strategy, StrategyState
@@ -16,7 +17,7 @@ class StrategyBase(Strategy):
     ) -> None:
         super().__init__(exchange)
         self.default_history = to
-        self.data = None
+        self.data = deque()
 
         self.position_open = False
 
@@ -32,7 +33,7 @@ class StrategyBase(Strategy):
 
     def init(self, symbol: str, state: StrategyState):
         self.data = state.interface.history(
-            symbol, to="1y", resolution=state.resolution, return_as="deque"
+            symbol, to=800, resolution=state.resolution, return_as="deque"
         )
 
     def register_callback(self, _type: str, callback: Callback) -> bool:
