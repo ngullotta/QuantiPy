@@ -7,8 +7,10 @@ license = "GPLv3"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<4.0"
+python = ">=3.9,<3.13"
 blankly = "^1.18.25b0"
+numpy = "1.26.1"
+croniter = "^3.0.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.8.0"
