@@ -1,0 +1,15 @@
+{
+    "binance": {
+        "live": {
+            "API_KEY": "",
+            "API_SECRET": ""
+        }
+    },
+    "alpaca": {
+        "live": {
+            "API_KEY": "",
+            "API_SECRET": ""
+        },
+        "paper": {}
+    }
+}
