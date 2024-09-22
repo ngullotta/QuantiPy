@@ -4,6 +4,7 @@ from typing import Callable, Dict, List
 
 from blankly import ScreenerState, Strategy, StrategyState
 from blankly.exchanges.abc_base_exchange import ABCBaseExchange
+from blankly.exchanges.orders.market_order import MarketOrder
 
 Callback = Callable[..., None]
 StrategyCallback = Dict[str, List[Callback]]
@@ -35,6 +36,18 @@ class StrategyBase(Strategy):
         self.register_on_tick_callback(self.append_price)
 
         self.logger.info("Using strategy: %s", self.__class__.__name__)
+
+    def log_order(self, price: float, order: MarketOrder) -> None:
+        status = order.get_status()
+        side, symbol, size = status["side"], status["symbol"], status["size"]
+        self.logger.info(
+            "[%s]: %s @ %.2f (qty=%.2f) (total=%.2f)",
+            side,
+            symbol,
+            price,
+            size,
+            price * size,
+        )
 
     def screener(self, symbol: str, state: ScreenerState) -> None:
         state.resolution = "1d"

@@ -16,7 +16,8 @@ class StochasticRSIWithRSIAndMACD(StrategyBase):
         qty = trunc(state.interface.cash / price, 3)
         if not qty:
             return
-        state.interface.market_order(symbol, side="buy", size=qty)
+        res = state.interface.market_order(symbol, side="buy", size=qty)
+        self.log_order(price, res)
         self.position_open = True
 
     def screener(self, symbol: str, state: ScreenerState) -> None:
@@ -33,7 +34,8 @@ class StochasticRSIWithRSIAndMACD(StrategyBase):
         qty = trunc(state.interface.account[state.base_asset].available, 3)
         if not qty:
             return
-        state.interface.market_order(symbol, side="sell", size=qty)
+        res = state.interface.market_order(symbol, side="sell", size=qty)
+        self.log_order(price, res)
         self.position_open = False
 
     def update_indicators(
