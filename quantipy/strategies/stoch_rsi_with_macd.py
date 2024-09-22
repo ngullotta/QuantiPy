@@ -14,6 +14,8 @@ class StochasticRSIWithRSIAndMACD(StrategyBase):
 
     def on_buy(self, price: float, symbol: str, state: StrategyState) -> None:
         qty = trunc(state.interface.cash / price, 3)
+        if not qty:
+            return
         state.interface.market_order(symbol, side="buy", size=qty)
         self.position_open = True
 
@@ -29,6 +31,8 @@ class StochasticRSIWithRSIAndMACD(StrategyBase):
 
     def on_sell(self, price: float, symbol: str, state: StrategyState) -> None:
         qty = trunc(state.interface.account[state.base_asset].available, 3)
+        if not qty:
+            return
         state.interface.market_order(symbol, side="sell", size=qty)
         self.position_open = False
 
