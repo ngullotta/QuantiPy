@@ -3,7 +3,7 @@ import logging
 import warnings
 from argparse import ArgumentParser
 
-from blankly import Binance, PaperTrade, Screener
+from blankly import Alpaca, Binance, PaperTrade, Screener
 
 from quantipy.logger import QuantiPyLogger
 from quantipy.strategies import RSIOversold, StochasticRSIWithRSIAndMACD
@@ -12,7 +12,7 @@ STRATEGIES = {
     "StochasticRSIWithRSIAndMACD": StochasticRSIWithRSIAndMACD,
     "RSIOversold": RSIOversold,
 }
-EXCHANGES = {"Binance": Binance, "PaperTrade": PaperTrade}
+EXCHANGES = {"Binance": Binance, "PaperTrade": PaperTrade, "Alpaca": Alpaca}
 
 
 def setupLogger():
