@@ -6,9 +6,12 @@ from argparse import ArgumentParser
 from blankly import Binance, PaperTrade, Screener
 
 from quantipy.logger import QuantiPyLogger
-from quantipy.strategies import StochasticRSIWithRSIAndMACD
+from quantipy.strategies import RSIOversold, StochasticRSIWithRSIAndMACD
 
-STRATEGIES = {"StochasticRSIWithRSIAndMACD": StochasticRSIWithRSIAndMACD}
+STRATEGIES = {
+    "StochasticRSIWithRSIAndMACD": StochasticRSIWithRSIAndMACD,
+    "RSIOversold": RSIOversold,
+}
 EXCHANGES = {"Binance": Binance, "PaperTrade": PaperTrade}
 
 
