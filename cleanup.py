@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 if __name__ == "__main__":
     # Results output
     for _file in Path(".").glob("*_results.json"):
