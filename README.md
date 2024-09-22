@@ -60,6 +60,16 @@ To get started with QuantiPy, follow these steps:
   $ poetry run python run.py StochasticRSIWithRSIAndMACD Binance --symbol BTC-USDT --backtest
   ```
 
+  Strategies are currently built with a "multi-symbol-single-position" sub-strategy
+
+  I.e the strategy looks at multiple symbol price events but only takes up one active
+  position at a time. This is intentional to avoid having to assign weights to
+  different assets and make buy orders using the weights. Since they're treated as an
+  "all or nothing" type of deal, it makes the state management much easier.
+
+  However a sufficently motivated user could easily implement this weighting system and
+  I may even try it in the future.
+
 ### Example strategy backtesting graph
 
 Backtest of `StochasticRSIWithRSIAndMACD`
