@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Bot (MSFT)",
+            "name": "Bot (Alpaca/ASFT)",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/run.py",
@@ -22,17 +22,35 @@
             "justMyCode": false
         },
         {
-            "name": "Bot (ETH)",
+            "name": "Bot (Binance/ETH)",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/run.py",
             "console": "integratedTerminal",
             "args": [
-                "RSIOversold",
+                "StochasticRSIWithRSIAndMACD",
                 "Binance",
                 "--symbol",
                 "ETH-USDT",
-                "--backtest"
+                "--backtest",
+                "--portfolio",
+                "live"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Bot (ETH Screener)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/run.py",
+            "console": "integratedTerminal",
+            "args": [
+                "StochasticRSIWithRSIAndMACD",
+                "Binance",
+                "--symbol",
+                "ETH-USDT",
+                "--as-screener",
+                "--all-symbols"
             ],
             "justMyCode": false
         }
