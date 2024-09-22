@@ -8,5 +8,8 @@
   ],
   "backtest_args": {
     "to": "1y"
+  },
+  "screener": {
+    "schedule": "*/30 * * * *"
   }
 }
