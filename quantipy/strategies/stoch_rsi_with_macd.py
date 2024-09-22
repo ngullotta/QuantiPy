@@ -25,7 +25,7 @@ class StochasticRSIWithRSIAndMACD(StrategyBase):
         price = state.interface.get_price(symbol)
         self.rsi, self.stoch_rsi_K, self.stoch_rsi_D = stochastic_rsi(prices["close"])
         self.macd_res, self.macd_sig, self.macd_hist = macd(prices["close"])
-        return {"buy": self.buy()}
+        return {"buy": self.buy(symbol)}
 
     def on_sell(self, price: float, symbol: str, state: StrategyState) -> None:
         qty = trunc(state.interface.account[state.base_asset].available, 3)
@@ -40,7 +40,7 @@ class StochasticRSIWithRSIAndMACD(StrategyBase):
         )
         self.macd_res, self.macd_sig, self.macd_hist = macd(self.data[symbol]["close"])
 
-    def buy(self) -> bool:
+    def buy(self, symbol: str) -> bool:
         # Both the %K and %D lines must have been below 20 recently
         stride = 2
         below_20_K = self.stoch_rsi_K < 20
@@ -69,7 +69,7 @@ class StochasticRSIWithRSIAndMACD(StrategyBase):
             return False
         return True
 
-    def sell(self) -> bool:
+    def sell(self, symbol: str) -> bool:
         # Both the %K and %D lines must have been above 80 recently
         stride = 2
         above_80_K = self.stoch_rsi_K > 80

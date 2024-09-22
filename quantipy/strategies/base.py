@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 from typing import Callable, Dict, List
 
 from blankly import ScreenerState, Strategy, StrategyState
@@ -19,7 +20,7 @@ class StrategyBase(Strategy):
     ) -> None:
         super().__init__(exchange)
         self.default_history = to
-        self.data = {}
+        self.data = defaultdict(dict)
 
         self.position_open = False
 
@@ -40,8 +41,9 @@ class StrategyBase(Strategy):
         prices = state.interface.history(
             symbol, 40, resolution=state.resolution, return_as="deque"
         )
+        self.data[symbol]["close"] = prices["close"]
         price = state.interface.get_price(symbol)
-        return {"symbol": symbol, "buy": self.buy(), "price": price}
+        return {"symbol": symbol, "buy": self.buy(symbol), "price": price}
 
     def formatter(self, results: List[dict], state: ScreenerState):
         # results is a dictionary on a per symbol basis
@@ -82,15 +84,15 @@ class StrategyBase(Strategy):
         for fn in self.callbacks["tick"]:
             fn(price, symbol, state)
 
-        if self.position_open and self.sell():
+        if self.position_open and self.sell(symbol):
             for fn in self.callbacks["sell"]:
                 fn(price, symbol, state)
-        elif not self.position_open and self.buy():
+        elif not self.position_open and self.buy(symbol):
             for fn in self.callbacks["buy"]:
                 fn(price, symbol, state)
 
-    def buy(self) -> bool:
+    def buy(self, symbol: str) -> bool:
         return False
 
-    def sell(self) -> bool:
+    def sell(self, symbol: str) -> bool:
         return False
