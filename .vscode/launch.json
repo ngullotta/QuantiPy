@@ -5,13 +5,28 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: Current File",
+            "name": "Bot (MSFT)",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/run.py",
             "console": "integratedTerminal",
             "args": [
-                "StochasticRSIWithRSIAndMACD",
+                "RSIOversold",
+                "Alpaca",
+                "--symbol",
+                "MSFT",
+                "--backtest"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Bot (ETH)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/run.py",
+            "console": "integratedTerminal",
+            "args": [
+                "RSIOversold",
                 "Binance",
                 "--symbol",
                 "ETH-USDT",
