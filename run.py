@@ -85,7 +85,7 @@ def main():
     parser.add_argument(
         "-sym",
         "--symbol",
-        nargs="+",
+        action="append",
         dest="symbols",
         required=True,
         help="One or more symbols to process",
@@ -112,6 +112,8 @@ def main():
 
     args = parser.parse_args()
 
+    logger = logging.getLogger()
+
     exchange = args.exchange(portfolio_name=args.portfolio)
 
     initial = {}
@@ -126,6 +128,7 @@ def main():
     strategy = args.strategy(exchange)
 
     for symbol in args.symbols:
+        logger.info("Tracking symbol: %s", symbol)
         strategy.add_price_event(
             strategy.on_event,
             symbol=symbol,
@@ -135,7 +138,6 @@ def main():
 
     if args.backtest:
         with warnings.catch_warnings():
-            logger = logging.getLogger()
             warnings.simplefilter("ignore")
             res = strategy.backtest(to=args.to, initial_values=initial)
             with open(f"{args.strategy.__name__}_results.json", "w") as fp:
