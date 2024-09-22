@@ -15,7 +15,9 @@
                 "Alpaca",
                 "--symbol",
                 "MSFT",
-                "--backtest"
+                "--backtest",
+                "--portfolio",
+                "live"
             ],
             "justMyCode": false
         },
