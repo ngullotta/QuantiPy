@@ -1,13 +1,11 @@
 import logging
-from collections import defaultdict, deque
-from typing import Callable, Deque, Dict, List
+from typing import Callable, Dict, List
 
-from blankly import Strategy, StrategyState
+from blankly import ScreenerState, Strategy, StrategyState
 from blankly.exchanges.abc_base_exchange import ABCBaseExchange
 
 Callback = Callable[..., None]
 StrategyCallback = Dict[str, List[Callback]]
-CloseHistory = Dict[str, Deque[float]]
 
 
 class StrategyBase(Strategy):
@@ -21,7 +19,7 @@ class StrategyBase(Strategy):
     ) -> None:
         super().__init__(exchange)
         self.default_history = to
-        self.data: CloseHistory = defaultdict(deque)
+        self.data = {}
 
         self.position_open = False
 
@@ -36,6 +34,24 @@ class StrategyBase(Strategy):
         self.register_on_tick_callback(self.append_price)
 
         self.logger.info("Using strategy: %s", self.__class__.__name__)
+
+    def screener(self, symbol: str, state: ScreenerState) -> None:
+        state.resolution = "1d"
+        prices = state.interface.history(
+            symbol, 40, resolution=state.resolution, return_as="deque"
+        )
+        price = state.interface.get_price(symbol)
+        return {"symbol": symbol, "buy": self.buy(), "price": price}
+
+    def formatter(self, results: List[dict], state: ScreenerState):
+        # results is a dictionary on a per symbol basis
+        result_string = "These are all the stocks that are currently oversold: \n"
+        for symbol in results:
+            if results[symbol]["buy"]:
+                result_string += "{} is currently oversold at a price of {}\n\n".format(
+                    symbol, results[symbol]["price"]
+                )
+        return result_string
 
     def append_price(self, price: float, symbol: str, state: StrategyState) -> None:
         self.data[symbol]["close"].append(price)

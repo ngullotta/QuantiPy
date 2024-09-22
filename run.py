@@ -3,7 +3,7 @@ import logging
 import warnings
 from argparse import ArgumentParser
 
-from blankly import Binance, PaperTrade
+from blankly import Binance, PaperTrade, Screener
 
 from quantipy.logger import QuantiPyLogger
 from quantipy.strategies import StochasticRSIWithRSIAndMACD
@@ -130,6 +130,15 @@ def main():
             with open(f"{args.strategy.__name__}_results.json", "w") as fp:
                 json.dump(res.to_dict(), fp, indent=4)
                 logger.info("Wrote backtest results to `%s`", fp.name)
+        exit()
+
+    if args.as_screener:
+        screener = Screener(
+            exchange,
+            strategy.screener,
+            symbols=args.symbols,
+            formatter=strategy.formatter,
+        )
         exit()
 
     strategy.start()

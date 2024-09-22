@@ -1,4 +1,4 @@
-from blankly import StrategyState
+from blankly import ScreenerState, StrategyState
 from blankly.indicators import macd, stochastic_rsi
 from blankly.utils import trunc
 
@@ -16,6 +16,16 @@ class StochasticRSIWithRSIAndMACD(StrategyBase):
         qty = trunc(state.interface.cash / price, 3)
         state.interface.market_order(symbol, side="buy", size=qty)
         self.position_open = True
+
+    def screener(self, symbol: str, state: ScreenerState) -> None:
+        state.resolution = "30m"
+        prices = state.interface.history(
+            symbol, 40, resolution=state.resolution, return_as="deque"
+        )
+        price = state.interface.get_price(symbol)
+        self.rsi, self.stoch_rsi_K, self.stoch_rsi_D = stochastic_rsi(prices["close"])
+        self.macd_res, self.macd_sig, self.macd_hist = macd(prices["close"])
+        return {"buy": self.buy()}
 
     def on_sell(self, price: float, symbol: str, state: StrategyState) -> None:
         qty = trunc(state.interface.account[state.base_asset].available, 3)
