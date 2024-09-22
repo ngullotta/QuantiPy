@@ -80,7 +80,8 @@ strategies so simple to implement. It really takes the headache out of it!
 
 ## @ToDo:
 
-- Add simple conversion to screener via CLI switch
+- ~~Add simple conversion to screener via CLI switch~~
+- Tests
 - Add more strategies
 - Much better logging and/or csv output
 - Add stop loss and take profit handlers
