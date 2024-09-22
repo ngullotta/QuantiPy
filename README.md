@@ -13,6 +13,7 @@ are soon parted"
 ## Currently supported Strategies
 
 - Stochastic RSI + RSI + MACD
+- RSI Oversold
 
 ## Installation
 
