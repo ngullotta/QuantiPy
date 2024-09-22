@@ -13,7 +13,25 @@ are soon parted"
 ## Currently supported Strategies
 
 - Stochastic RSI + RSI + MACD
+  - A complex strategy that can detect swings in momentum before the regular 
+  indicators. Buy positions are taken up when all of the following criteria are met:
+    - The Stochastic RSI %K and %D must have been below 20 in the last 2 periods
+      - This volatile RSI indicates the symbol is oversold (even when the regular RSI 
+      does not)
+    - The RSI must be above 50
+      - This indicates that the symbol is still bullish (despite the earlier Stochastic 
+      RSI)
+    - The MACD must cross the signal line to confirm the uptrend
+    - The Stochastic RSI %K and %D must not *currently* be oversold (above 20)
+  - With all these criteria being met, a buy position is taken up. The reverse is true 
+  for a selling position
+    - I.e The Stochastic RSI %K and %D must have been above 80, the RSI below 50, MACD 
+    crossing down etc.
+
 - RSI Oversold
+  - A simple strategy where buy positions are taken up when the RSI is less than 30 
+  (indicating the symbol is oversold) and sell positions are taken up when the RSI is 
+  above 70 (indicating the symbol is overbought)
 
 ## Installation
 
