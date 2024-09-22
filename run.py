@@ -102,6 +102,14 @@ def main():
         "-l", "--log-level", type=logging.getLogger().setLevel, default="INFO"
     )
 
+    parser.add_argument(
+        "-as",
+        "--all-symbols",
+        action="store_true",
+        default=False,
+        help="Use all symbols traded in a given exchange (Not recommended)",
+    )
+
     args = parser.parse_args()
 
     exchange = args.exchange(portfolio_name=args.portfolio)
@@ -139,7 +147,11 @@ def main():
         screener = Screener(
             exchange,
             strategy.screener,
-            symbols=args.symbols,
+            symbols=(
+                args.symbols
+                if not args.all_symbols
+                else [obj["symbol"] for obj in exchange.interface.get_products()]
+            ),
             formatter=strategy.formatter,
         )
         exit()
