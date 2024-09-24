@@ -4,7 +4,7 @@ from blankly.indicators import macd, stochastic_rsi
 from quantipy.strategies.simple import SimpleStrategy, event
 
 
-class HarmonicOscillator(SimpleStrategy):
+class HarmonicOscillators(SimpleStrategy):
     """
     A complex strategy involving the Stochastic RSI, (Regular) RSI and
     the MACD all working in concert.
