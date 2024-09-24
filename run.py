@@ -139,6 +139,18 @@ def main():
             if _list in data:
                 args.symbols = data[_list][: args.top]
 
+    if args.backtest:
+        with open("backtest.json") as fp:
+            data = json.load(fp)
+            settings = data.get("settings", {})
+            benchmark = settings.get("benchmark_symbol")
+            if benchmark and benchmark not in args.symbols:
+                logging.info(
+                    "Benchmark symbol %s not in symbols, adding it now",
+                    benchmark
+                )
+                args.symbols.append(benchmark)
+
     for symbol in args.symbols:
         logger.info("Tracking symbol: %s", symbol)
         strategy.add_price_event(
