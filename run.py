@@ -2,6 +2,7 @@ import json
 import logging
 import warnings
 from argparse import ArgumentParser
+from sys import argv
 
 from blankly import Alpaca, Binance, PaperTrade, Screener
 
@@ -48,6 +49,13 @@ def main():
         "exchange",
         type=EXCHANGES.get,
         help="The name of the exchange to use",
+    )
+
+    parser.add_argument(
+        "-ls",
+        action="store_true",
+        default=False,
+        help="Print all available strategies and exchanges, then exit"
     )
 
     parser.add_argument(
@@ -113,6 +121,15 @@ def main():
     parser.add_argument(
         "--top", type=int, default=10, help="When using symbol lists, use top X symbols"
     )
+
+    if len(argv) > 1 and argv[1] == "-ls":
+        print("Available strategies:")
+        for st in sorted(STRATEGIES.keys()):
+            print("" * 4, st)
+        print("\nAvailable exchanges:")
+        for ex in sorted(EXCHANGES.keys()):
+            print("" * 4, ex)
+        exit()
 
     args = parser.parse_args()
 
