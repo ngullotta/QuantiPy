@@ -111,10 +111,7 @@ def main():
     )
 
     parser.add_argument(
-        "--top",
-        type=int,
-        default=10,
-        help="When using symbol lists, use top X symbols"
+        "--top", type=int, default=10, help="When using symbol lists, use top X symbols"
     )
 
     args = parser.parse_args()
@@ -140,7 +137,7 @@ def main():
         with open("symbols.json") as fp:
             data = json.load(fp)
             if _list in data:
-                args.symbols = data[_list][:args.top]
+                args.symbols = data[_list][: args.top]
 
     for symbol in args.symbols:
         logger.info("Tracking symbol: %s", symbol)
