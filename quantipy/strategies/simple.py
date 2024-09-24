@@ -1,4 +1,4 @@
-from blankly import StrategyState
+from blankly import ScreenerState, StrategyState
 from blankly.exchanges.orders.market_order import MarketOrder
 from blankly.utils import trunc
 
@@ -64,3 +64,9 @@ class SimpleStrategy(StrategyBase):
         self.logger.info(self.order_to_str(order))
         self.positions[symbol] = (side == "buy") and (data["status"] == "done")
         return quantity
+
+    def screener(self, symbol: str, state: ScreenerState) -> None:
+        self.data[symbol] = state.interface.history(
+            symbol, 800, resolution=state.resolution, return_as="deque"
+        )
+        return {"buy": self.buy(symbol)}
