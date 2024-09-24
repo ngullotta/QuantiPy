@@ -1,6 +1,7 @@
 import json
 import logging
 import warnings
+from datetime import datetime
 from argparse import ArgumentParser
 from sys import argv
 
@@ -187,19 +188,27 @@ def main():
         exit()
 
     if args.as_screener:
+
+        def init(state):
+            state.resolution = args.resolution
+
+        def formatter(results, state):
+            outupt = datetime.now().strftime("%c") + ":\n"
+            for symbol in results:
+                if results[symbol]["buy"]:
+                    outupt += "[%s] %s\n" % (symbol, results[symbol]["buy"])
+            print(outupt)
+
         screener = Screener(
             exchange,
             strategy.screener,
-            symbols=(
-                args.symbols
-                if not args.all_symbols
-                else [obj["symbol"] for obj in exchange.interface.get_products()]
-            ),
-            formatter=strategy.formatter,
+            symbols=args.symbols,
+            init=init,
+            formatter=formatter,
         )
-        exit()
 
-    strategy.start()
+    if args.live:
+        strategy.start()
 
 
 if __name__ == "__main__":
