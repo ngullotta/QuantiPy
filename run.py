@@ -7,11 +7,11 @@ from sys import argv
 from blankly import Alpaca, Binance, PaperTrade, Screener
 
 from quantipy.logger import QuantiPyLogger
-from quantipy.strategies import RSIOversold, StochasticRSIWithRSIAndMACD
+from quantipy.strategies import HarmonicOscillator, Oversold
 
 STRATEGIES = {
-    "StochasticRSIWithRSIAndMACD": StochasticRSIWithRSIAndMACD,
-    "RSIOversold": RSIOversold,
+    "HarmonicOscillator": HarmonicOscillator,
+    "Oversold": Oversold,
 }
 EXCHANGES = {"Binance": Binance, "PaperTrade": PaperTrade, "Alpaca": Alpaca}
 
@@ -55,7 +55,7 @@ def main():
         "-ls",
         action="store_true",
         default=False,
-        help="Print all available strategies and exchanges, then exit"
+        help="Print all available strategies and exchanges, then exit",
     )
 
     parser.add_argument(
@@ -125,7 +125,8 @@ def main():
     if len(argv) > 1 and argv[1] == "-ls":
         print("Available strategies:")
         for st in sorted(STRATEGIES.keys()):
-            print("" * 4, st)
+            print("" * 4, st, end="")
+            print("" * 8, STRATEGIES[st].__doc__)
         print("\nAvailable exchanges:")
         for ex in sorted(EXCHANGES.keys()):
             print("" * 4, ex)
@@ -163,15 +164,14 @@ def main():
             benchmark = settings.get("benchmark_symbol")
             if benchmark and benchmark not in args.symbols:
                 logging.info(
-                    "Benchmark symbol %s not in symbols, adding it now",
-                    benchmark
+                    "Benchmark symbol %s not in symbols, adding it now", benchmark
                 )
                 args.symbols.append(benchmark)
 
     for symbol in args.symbols:
         logger.info("Tracking symbol: %s", symbol)
         strategy.add_price_event(
-            strategy.on_event,
+            strategy.tick,
             symbol=symbol,
             resolution=args.resolution,
             init=strategy.init,

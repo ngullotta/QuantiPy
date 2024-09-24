@@ -1,4 +1,4 @@
-from quantipy.strategies.oversold import RSIOversold
-from quantipy.strategies.stoch_rsi_with_macd import StochasticRSIWithRSIAndMACD
+from quantipy.strategies.rsi import Oversold
+from quantipy.strategies.stochastic import HarmonicOscillator
 
-__all__ = ["StochasticRSIWithRSIAndMACD", "RSIOversold"]
+__all__ = ["HarmonicOscillator", "Oversold"]
