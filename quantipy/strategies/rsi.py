@@ -1,6 +1,5 @@
 from blankly import StrategyState
 from blankly.indicators import rsi
-from blankly.utils import trunc
 
 from quantipy.strategies.simple import SimpleStrategy, event
 

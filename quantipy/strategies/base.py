@@ -1,12 +1,10 @@
 import logging
 from collections import defaultdict
-from functools import wraps
-from typing import Any, Callable, Deque, Dict, List
+from typing import Callable, Deque, Dict, List
 
-from blankly import ScreenerState, Strategy, StrategyState
+from blankly import Strategy
 from blankly.exchanges.exchange import Exchange
 from blankly.exchanges.interfaces.exchange_interface import ExchangeInterface
-from blankly.exchanges.orders.market_order import MarketOrder
 
 Callback = Callable[..., None]
 EventCallbacks = Dict[str, List[Callback]]

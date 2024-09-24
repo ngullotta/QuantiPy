@@ -1,4 +1,3 @@
-import numpy as np
 from blankly import StrategyState
 from blankly.exchanges.orders.market_order import MarketOrder
 from blankly.utils import trunc
