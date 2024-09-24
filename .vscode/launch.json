@@ -11,13 +11,15 @@
             "program": "${workspaceFolder}/run.py",
             "console": "integratedTerminal",
             "args": [
-                "RSIOversold",
+                "Oversold",
                 "Alpaca",
                 "--symbol",
-                "MSFT",
-                "--backtest",
+                "NASDAQ100",
+                "--top",
+                "2",
                 "--portfolio",
-                "live"
+                "paper",
+                "--backtest"
             ],
             "justMyCode": false
         },
