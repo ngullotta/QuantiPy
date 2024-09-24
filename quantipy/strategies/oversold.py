@@ -12,19 +12,21 @@ class RSIOversold(StrategyBase):
         self.register_on_sell_callback(self.on_sell)
 
     def on_buy(self, price: float, symbol: str, state: StrategyState) -> None:
-        qty = trunc(state.interface.cash / price, 3)
-        state.interface.market_order(symbol, side="buy", size=qty)
-        self.position_open = True
+        quantity = trunc(state.interface.cash / price, 3)
+        if quantity:
+            state.interface.market_order(symbol, side="buy", size=quantity)
+            self.position_open = True
 
     def on_sell(self, price: float, symbol: str, state: StrategyState) -> None:
-        qty = trunc(state.interface.account[state.base_asset].available, 3)
-        state.interface.market_order(symbol, side="sell", size=qty)
-        self.position_open = False
+        quantity = trunc(state.interface.account[state.base_asset].available, 3)
+        if quantity:
+            state.interface.market_order(symbol, side="sell", size=quantity)
+            self.position_open = False
 
     def buy(self, symbol: str) -> bool:
         _rsi = rsi(self.data[symbol]["close"])
-        return _rsi[-1] < 30
+        return _rsi[-1] <= 30
 
     def sell(self, symbol: str) -> bool:
         _rsi = rsi(self.data[symbol]["close"])
-        return _rsi[-1] > 70
+        return _rsi[-1] >= 70
