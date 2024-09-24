@@ -22,8 +22,7 @@ class StrategyBase(Strategy):
         super().__init__(exchange)
         self.default_history = to
         self.data = defaultdict(dict)
-
-        self.position_open = False
+        self.positions = defaultdict(bool)
 
         self.callbacks: StrategyCallback = {
             "buy": [],
@@ -97,10 +96,10 @@ class StrategyBase(Strategy):
         for fn in self.callbacks["tick"]:
             fn(price, symbol, state)
 
-        if self.position_open and self.sell(symbol):
+        if self.positions[symbol] and self.sell(symbol):
             for fn in self.callbacks["sell"]:
                 fn(price, symbol, state)
-        elif not self.position_open and self.buy(symbol):
+        elif not self.positions[symbol] and self.buy(symbol):
             for fn in self.callbacks["buy"]:
                 fn(price, symbol, state)
 

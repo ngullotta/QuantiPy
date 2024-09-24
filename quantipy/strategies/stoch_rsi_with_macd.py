@@ -18,7 +18,7 @@ class StochasticRSIWithRSIAndMACD(StrategyBase):
             return
         res = state.interface.market_order(symbol, side="buy", size=qty)
         self.log_order(price, res)
-        self.position_open = True
+        self.positions[symbol] = True
 
     def screener(self, symbol: str, state: ScreenerState) -> None:
         state.resolution = "30m"
@@ -36,7 +36,7 @@ class StochasticRSIWithRSIAndMACD(StrategyBase):
             return
         res = state.interface.market_order(symbol, side="sell", size=qty)
         self.log_order(price, res)
-        self.position_open = False
+        self.positions[symbol] = False
 
     def update_indicators(
         self, price: float, symbol: str, state: StrategyState
