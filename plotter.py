@@ -5,7 +5,7 @@ from pathlib import Path
 from bokeh.layouts import gridplot
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure, show
-from pandas import DataFrame, read_csv, to_datetime, concat, to_numeric
+from pandas import DataFrame, concat, read_csv, to_datetime, to_numeric
 
 
 def get_price_data(symbol: str, start: int, end: int) -> DataFrame:
