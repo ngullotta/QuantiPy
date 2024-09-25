@@ -15,6 +15,26 @@ class HarmonicOscillators(SimpleStrategy):
     # Lookback period for the %K and %D checks
     stride: int = 5
 
+    # Take profits > 15%
+    take_profit_pct: float = 0.15
+
+    # Stop loss after a 5% loss
+    stop_loss_pct: float = 0.05
+
+    @event("tick")
+    def take_profit_or_stop_loss(
+        self, price: float, symbol: str, state: StrategyState
+    ) -> None:
+        if not self.positions[symbol].get("open"):
+            return
+
+        entry: float = self.positions[symbol]["entry"]
+        take_profit: float = entry * (1 + self.take_profit_pct)
+        stop_loss: float = entry * (1 - self.stop_loss_pct)
+
+        if price >= take_profit or price <= stop_loss:
+            self.s(price, symbol, state)
+
     @event("buy")
     def b(self, price: float, symbol: str, state: StrategyState) -> float:
         return self.order(price, symbol, state, pct=0.5)
