@@ -30,6 +30,15 @@ def main() -> None:  # noqa: C901
         help="Path of the backtest results",
     )
 
+    parser.add_argument(
+        "--start",
+        type=int,
+        help="""
+        The first history point time for the results. Helpful for getting the 
+        right historical data to chart with
+        """
+    )
+
     args = parser.parse_args()
 
     if not args.path.exists():
@@ -39,7 +48,7 @@ def main() -> None:  # noqa: C901
     with open(args.path) as fp:
         data = json.load(fp)
         orders = data["trades"]["created"]
-        start = int(data["history"][0]["time"])
+        start = args.start or int(data["history"][0]["time"])
 
     df = DataFrame(orders)
     df["time"] = to_datetime(df["time"], unit="s")
