@@ -57,7 +57,8 @@ def main() -> None:  # noqa: C901
 
         # Plot buy orders
         buy_orders = group[group["side"] == "buy"]
-        p.circle(
+        p.scatter(
+            marker="circle",
             x="time",
             y="price",
             size=10,
@@ -69,7 +70,8 @@ def main() -> None:  # noqa: C901
 
         # Plot sell orders
         sell_orders = group[group["side"] == "sell"]
-        p.triangle(
+        p.scatter(
+            marker="triangle",
             x="time",
             y="price",
             size=10,
