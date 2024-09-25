@@ -207,8 +207,7 @@ def main():
             formatter=formatter,
         )
 
-    if args.live:
-        strategy.start()
+    strategy.start()
 
 
 if __name__ == "__main__":
