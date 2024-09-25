@@ -41,7 +41,7 @@ class HarmonicOscillators(SimpleStrategy):
         below_20_K: Series = stoch_rsi_K < 20
         below_20_D: Series = stoch_rsi_D < 20
         both_below_20: Series = below_20_K & below_20_D
-        lookback: Series = both_below_20[-self.stride:]
+        lookback: Series = both_below_20[-self.stride :]
         both_below_20_occurred: bool = lookback.any()
         if not both_below_20_occurred:
             return False
@@ -95,7 +95,7 @@ class HarmonicOscillators(SimpleStrategy):
         above_80_K: Series = stoch_rsi_K > 80
         above_80_D: Series = stoch_rsi_D > 80
         both_above_80: Series = above_80_K & above_80_D
-        lookback: Series = both_above_80[-self.stride:]
+        lookback: Series = both_above_80[-self.stride :]
         both_above_80_occurred: bool = lookback.any()
         if not both_above_80_occurred:
             return False
