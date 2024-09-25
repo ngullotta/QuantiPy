@@ -34,6 +34,7 @@ def main() -> None:  # noqa: C901
 
     if not args.path.exists():
         print('Could not find file along path "%s"' % args.path)
+        exit(1)
 
     with open(args.path) as fp:
         data = json.load(fp)
