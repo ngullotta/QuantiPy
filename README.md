@@ -65,7 +65,7 @@ To get started with QuantiPy, follow these steps:
 3. **Run a strategy backtest:**
 
     ```bash
-    poetry run python run.py <strategy> <exchange> --symbol MSFT
+    poetry run python run.py <strategy> <exchange> --symbol MSFT --backtest
     ```
 
     - By default `--live` is false to prevent accidental losses
