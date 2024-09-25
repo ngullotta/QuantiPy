@@ -36,7 +36,7 @@ def main() -> None:  # noqa: C901
         help="""
         The first history point time for the results. Helpful for getting the 
         right historical data to chart with
-        """
+        """,
     )
 
     args = parser.parse_args()

@@ -173,7 +173,7 @@ def main() -> None:  # noqa: C901
                 )
                 args.symbols.append(benchmark)
 
-                # We need this in the backtest data but don't 
+                # We need this in the backtest data but don't
                 # necessarily want to actually *trade* it
                 strategy.blacklist.append(benchmark)
 
