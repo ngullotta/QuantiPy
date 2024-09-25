@@ -1,0 +1,10 @@
+[flake8]
+ignore = ANN101
+exclude =
+    .git,
+    .venv
+    __pycache__,
+    old,
+    build,
+    dist
+max-complexity = 10
