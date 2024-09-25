@@ -26,6 +26,7 @@ class StrategyBase(Strategy):
     data: HistoricalData = defaultdict(dict)
     positions: Positions = defaultdict(bool)
     callbacks: EventCallbacks = defaultdict(list)
+    blacklist: List[str] = []
 
     def __init__(self, exchange: Exchange) -> None:
         self.logger.info("Using strategy: %s", self.__class__.__name__)
