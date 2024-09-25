@@ -2,6 +2,8 @@
 # We don't care about type annotations for:
 # *args, **kwargs, self, or cls
 ignore = ANN002,ANN003,ANN101,ANN102
+# E203 is not pep8 compliant
+extend-ignore = E203
 exclude =
     .git,
     .venv
