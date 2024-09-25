@@ -13,7 +13,7 @@ class HarmonicOscillators(SimpleStrategy):
     """
 
     # Lookback period for the %K and %D checks
-    stride: int = 5
+    stride: int = 8
 
     # Take profits > 15%
     take_profit_pct: float = 0.15
