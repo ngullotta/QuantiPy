@@ -9,9 +9,9 @@ from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure, show
 
 
-def get_price_data(symbol: str, start: float = None) -> pd.DataFrame:
-    glob = f"*{symbol}," + str(start) if start else "" + "*.csv"
-    for _file in Path("./price_caches").glob(f"*{symbol},*.csv"):
+def get_price_data(symbol: str, start: int = None) -> pd.DataFrame:
+    glob = "*%s,%s*.csv" % (symbol, str(start) if start else "")
+    for _file in Path("./price_caches").glob(glob):
         return pd.read_csv(_file)
 
 
