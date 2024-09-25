@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Callable, Deque, Dict, List
+from typing import Callable, Deque, Dict, List, Union
 
 from blankly import Strategy
 from blankly.exchanges.exchange import Exchange
@@ -9,7 +9,7 @@ from blankly.exchanges.interfaces.exchange_interface import ExchangeInterface
 Callback = Callable[..., None]
 EventCallbacks = Dict[str, List[Callback]]
 HistoricalData = Dict[str, Dict[str, Deque]]
-Positions = Dict[str, bool]
+Positions = Dict[str, Dict[str, Union[bool, float]]]
 
 
 def event(event: str) -> Callable:
@@ -24,7 +24,7 @@ class StrategyBase(Strategy):
 
     logger: logging.RootLogger = logging.getLogger()
     data: HistoricalData = defaultdict(dict)
-    positions: Positions = defaultdict(bool)
+    positions: Positions = defaultdict(dict)
     callbacks: EventCallbacks = defaultdict(list)
     blacklist: List[str] = []
 
