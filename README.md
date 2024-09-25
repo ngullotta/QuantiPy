@@ -7,8 +7,9 @@ Strategies are written using the Blankly Model API and then run on the command
 line. In using Blankly, the strategies can easily be backtested before use.
 
 These are my personal strategies and are ***categorically and unequivocally
-unfit for use in real markets***. As the saying goes: "A fool and his money
-are soon parted"
+unfit for use in real markets***. 
+
+As the saying goes: "A fool and his money are soon parted"
 
 ## Currently supported Strategies
 
@@ -37,7 +38,7 @@ are soon parted"
 
 ## Installation
 
-To get started with QuantiPy, follow these steps:
+To get started with QuantiPy, follow these steps
 
 ### Prerequisites
 
@@ -65,7 +66,7 @@ To get started with QuantiPy, follow these steps:
 3. **Run a strategy backtest:**
 
     ```bash
-    poetry run python run.py <strategy> <exchange> --symbol MSFT --backtest
+    poetry run python run.py <strategy> <exchange> --symbol BTC-USDT --backtest
     ```
 
     - By default `--live` is false to prevent accidental losses
@@ -77,14 +78,14 @@ To get started with QuantiPy, follow these steps:
 
   Simple backtest of Bitcoin on Binance using the Stochastic + RSI + MACD strategy
   ```bash
-  $ poetry run python run.py StochasticRSIWithRSIAndMACD Binance --symbol BTC-USDT --backtest
+  $ poetry run python run.py HarmonicOscillators Binance --symbol BTC-USDT --backtest
   ```
 
   Strategies are currently built with a "multi-symbol-multi-position" sub-strategy
 
 ### Example strategy backtesting graph
 
-Backtest of `StochasticRSIWithRSIAndMACD`
+Backtest of `HarmonicOscillators`
 ![An example backtest output](./Stoch+RSI+MACD-Backtest.png)
 
 ## Contributing
