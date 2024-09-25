@@ -5,7 +5,7 @@ from pathlib import Path
 from bokeh.layouts import gridplot
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure, show
-from pandas import DataFrame, read_csv, to_datetime, concat
+from pandas import DataFrame, read_csv, to_datetime, concat, to_numeric
 
 
 def get_price_data(symbol: str, start: int, end: int) -> DataFrame:
@@ -13,7 +13,7 @@ def get_price_data(symbol: str, start: int, end: int) -> DataFrame:
     for _file in Path("./price_caches").glob("*%s*.csv" % symbol):
         data.append(read_csv(_file))
     df = concat(data)
-    df["time"] = df["time"].apply(lambda x: int(x))
+    df["time"] = to_numeric(df["time"], downcast="integer")
     return df.drop_duplicates(subset="time").sort_values(by="time")
 
 
