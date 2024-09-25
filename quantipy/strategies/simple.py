@@ -3,9 +3,13 @@ from blankly.exchanges.orders.market_order import MarketOrder
 from blankly.utils import trunc
 
 from quantipy.strategies.base import StrategyBase, event
+from quantipy.strategies.split_protector import SplitProtector
 
 
 class SimpleStrategy(StrategyBase):
+
+    protector = SplitProtector("splits.json")
+
     def init(self, symbol: str, state: StrategyState) -> None:
         self.data[symbol] = state.interface.history(
             symbol, to=800, resolution=state.resolution, return_as="deque"
@@ -25,6 +29,13 @@ class SimpleStrategy(StrategyBase):
         self.run_callbacks("tick", *args)
 
         if symbol in self.blacklist:
+            return
+
+        # Avoid splits when backtesting
+        if not self.protector.safe(symbol, self.time()):
+            # If we have an open position, exit it immediately
+            if self.positions[symbol].get("open"):
+                self.run_callbacks("sell", *args)
             return
 
         if self.positions[symbol].get("open") and self.sell(symbol):

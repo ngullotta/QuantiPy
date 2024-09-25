@@ -1,9 +1,9 @@
-import json
 import collections
+import json
 from argparse import ArgumentParser
 from datetime import datetime
-from zoneinfo import ZoneInfo
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 
 def main() -> None:
@@ -52,10 +52,12 @@ def main() -> None:
             )
             exit()
 
-    data[args.symbol].append({
-        "start": int(date.timestamp()),
-        "end": int(date.timestamp() + (86400 * args.pad))
-    })
+    data[args.symbol].append(
+        {
+            "start": int(date.timestamp() - (86400 * args.pad)),
+            "end": int(date.timestamp() + (86400 * args.pad)),
+        }
+    )
 
     with open(splits_path, "w") as fp:
         ordered = collections.OrderedDict(data.items())
