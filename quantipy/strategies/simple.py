@@ -27,9 +27,9 @@ class SimpleStrategy(StrategyBase):
         if symbol in self.blacklist:
             return
 
-        if self.positions[symbol] and self.sell(symbol):
+        if self.positions[symbol].get("open") and self.sell(symbol):
             self.run_callbacks("sell", *args)
-        elif not self.positions[symbol] and self.buy(symbol):
+        elif not self.positions[symbol].get("open") and self.buy(symbol):
             self.run_callbacks("buy", *args)
 
     @property
@@ -82,9 +82,11 @@ class SimpleStrategy(StrategyBase):
         self.logger.info(self.order_to_str(order))
 
         # Record our new position
-        self.positions[symbol]: bool = (
+        self.positions[symbol]["open"]: bool = (
             side == "buy" and data["status"] == "done"
         )
+
+        self.positions[symbol]["entry"] = price
 
         return quantity
 
