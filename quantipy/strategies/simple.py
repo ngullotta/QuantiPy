@@ -24,6 +24,9 @@ class SimpleStrategy(StrategyBase):
 
         self.run_callbacks("tick", *args)
 
+        if symbol in self.blacklist:
+            return
+
         if self.positions[symbol] and self.sell(symbol):
             self.run_callbacks("sell", *args)
         elif not self.positions[symbol] and self.buy(symbol):
