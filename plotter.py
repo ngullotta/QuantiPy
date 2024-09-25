@@ -34,7 +34,7 @@ def main() -> None:  # noqa: C901
         "--start",
         type=int,
         help="""
-        The first history point time for the results. Helpful for getting the 
+        The first history point time for the results. Helpful for getting the
         right historical data to chart with
         """,
     )
