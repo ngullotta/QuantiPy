@@ -6,19 +6,21 @@ from quantipy.strategies.base import StrategyBase, event
 
 
 class SimpleStrategy(StrategyBase):
-    def init(self, symbol: str, state: StrategyState):
+    def init(self, symbol: str, state: StrategyState) -> None:
         self.data[symbol] = state.interface.history(
             symbol, to=800, resolution=state.resolution, return_as="deque"
         )
 
     @event("tick")
-    def append_close(self, price: float, symbol: str, state: StrategyState) -> None:
+    def append_close(
+        self, price: float, symbol: str, state: StrategyState
+    ) -> None:
         if not price:
             return
         self.data[symbol]["close"].append(price)
 
     def tick(self, price: float, symbol: str, state: StrategyState) -> None:
-        args = [price, symbol, state]
+        args: tuple = (price, symbol, state)
 
         self.run_callbacks("tick", *args)
 
@@ -31,9 +33,13 @@ class SimpleStrategy(StrategyBase):
     def cash(self) -> float:
         return self.interface.cash
 
+    @property
+    def account(self) -> dict:
+        return self.interface.account
+
     @staticmethod
     def order_to_str(order: MarketOrder) -> str:
-        data = order.get_response()
+        data: dict = order.get_response()
         return "(%s) [%s] %.2f of -> %s" % (
             int(data["created_at"]),
             data["side"],
@@ -46,26 +52,40 @@ class SimpleStrategy(StrategyBase):
         price: float,
         symbol: str,
         state: StrategyState,
-        side="buy",
-        pct: float = 1,
+        side: str = "buy",
+        pct: float = 1.0,
     ) -> float:
-        quantity = trunc(
-            (
-                ((self.cash * pct) / price)
-                if side == "buy"
-                else state.interface.account[state.base_asset].available
-            ),
-            4,
-        )
+        # If we're buying divide our cash (or percentage of cash) by
+        # unit price. Otherwise sell the whole smash
+        quantity: float = 0.0
+        if side == "buy":
+            quantity = (self.cash * pct) / price
+        else:
+            quantity = self.account[state.base_asset].available
+
+        # Rounding to 4 decimals should be enough for both regular
+        # stocks (with fractional shares) and crypto exchanges
+        quantity: float = trunc(quantity, 4)
+
         if not quantity:
-            return
-        order = state.interface.market_order(symbol, side=side, size=quantity)
-        data = order.get_response()
+            return 0.0
+
+        # Do the actual order now
+        order: MarketOrder = state.interface.market_order(
+            symbol, side=side, size=quantity
+        )
+
+        data: dict = order.get_response()
         self.logger.info(self.order_to_str(order))
-        self.positions[symbol] = (side == "buy") and (data["status"] == "done")
+
+        # Record our new position
+        self.positions[symbol]: bool = (
+            side == "buy" and data["status"] == "done"
+        )
+
         return quantity
 
-    def screener(self, symbol: str, state: ScreenerState) -> None:
+    def screener(self, symbol: str, state: ScreenerState) -> dict:
         self.data[symbol] = state.interface.history(
             symbol, 800, resolution=state.resolution, return_as="deque"
         )

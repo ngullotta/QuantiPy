@@ -22,7 +22,7 @@ def event(event: str) -> Callable:
 
 class StrategyBase(Strategy):
 
-    logger = logging.getLogger()
+    logger: logging.RootLogger = logging.getLogger()
     data: HistoricalData = defaultdict(dict)
     positions: Positions = defaultdict(bool)
     callbacks: EventCallbacks = defaultdict(list)

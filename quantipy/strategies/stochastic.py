@@ -19,7 +19,9 @@ class HarmonicOscillators(SimpleStrategy):
         return self.order(price, symbol, state, side="sell")
 
     def buy(self, symbol: str) -> bool:
-        rsi, stoch_rsi_K, stoch_rsi_D = stochastic_rsi(self.data[symbol]["close"])
+        rsi, stoch_rsi_K, stoch_rsi_D = stochastic_rsi(
+            self.data[symbol]["close"]
+        )
 
         # Both the %K and %D lines must have been below 20 recently
         stride = 2
@@ -52,7 +54,9 @@ class HarmonicOscillators(SimpleStrategy):
         return True
 
     def sell(self, symbol: str) -> bool:
-        rsi, stoch_rsi_K, stoch_rsi_D = stochastic_rsi(self.data[symbol]["close"])
+        rsi, stoch_rsi_K, stoch_rsi_D = stochastic_rsi(
+            self.data[symbol]["close"]
+        )
 
         # Both the %K and %D lines must have been above 80 recently
         stride = 2

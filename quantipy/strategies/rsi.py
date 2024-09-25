@@ -1,3 +1,4 @@
+import numpy as np
 from blankly import StrategyState
 from blankly.indicators import rsi
 
@@ -11,17 +12,17 @@ class Oversold(SimpleStrategy):
     """
 
     @event("buy")
-    def b(self, price: float, symbol: str, state: StrategyState) -> None:
-        self.order(price, symbol, state)
+    def b(self, price: float, symbol: str, state: StrategyState) -> float:
+        return self.order(price, symbol, state)
 
     @event("sell")
-    def s(self, price: float, symbol: str, state: StrategyState) -> None:
-        self.order(price, symbol, state, side="sell")
+    def s(self, price: float, symbol: str, state: StrategyState) -> float:
+        return self.order(price, symbol, state, side="sell")
 
     def buy(self, symbol: str) -> bool:
-        _rsi = rsi(self.data[symbol]["close"])
+        _rsi: np.array = rsi(self.data[symbol]["close"])
         return _rsi[-1] <= 30
 
     def sell(self, symbol: str) -> bool:
-        _rsi = rsi(self.data[symbol]["close"])
+        _rsi: np.array = rsi(self.data[symbol]["close"])
         return _rsi[-1] >= 70

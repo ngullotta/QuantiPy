@@ -1,11 +1,11 @@
 import json
 import logging
 import warnings
-from datetime import datetime
 from argparse import ArgumentParser
+from datetime import datetime
 from sys import argv
 
-from blankly import Alpaca, Binance, PaperTrade, Screener
+from blankly import Alpaca, Binance, PaperTrade, Screener, ScreenerState
 
 from quantipy.logger import QuantiPyLogger
 from quantipy.strategies import HarmonicOscillators, Oversold
@@ -17,7 +17,7 @@ STRATEGIES = {
 EXCHANGES = {"Binance": Binance, "PaperTrade": PaperTrade, "Alpaca": Alpaca}
 
 
-def setupLogger():
+def setupLogger() -> None:
     logger = logging.getLogger()
     console = logging.StreamHandler()
     formatter = QuantiPyLogger()
@@ -27,7 +27,7 @@ def setupLogger():
     logger.setLevel(logging.DEBUG)
 
 
-def main():
+def main() -> None:  # noqa: C901
     setupLogger()
 
     parser = ArgumentParser(
@@ -120,7 +120,10 @@ def main():
     )
 
     parser.add_argument(
-        "--top", type=int, default=10, help="When using symbol lists, use top X symbols"
+        "--top",
+        type=int,
+        default=10,
+        help="When using symbol lists, use top X symbols",
     )
 
     if len(argv) > 1 and argv[1] == "-ls":
@@ -165,7 +168,8 @@ def main():
             benchmark = settings.get("benchmark_symbol")
             if benchmark and benchmark not in args.symbols:
                 logging.info(
-                    "Benchmark symbol %s not in symbols, adding it now", benchmark
+                    "Benchmark symbol %s not in symbols, adding it now",
+                    benchmark,
                 )
                 args.symbols.append(benchmark)
 
@@ -189,17 +193,17 @@ def main():
 
     if args.as_screener:
 
-        def init(state):
+        def init(state: ScreenerState) -> None:
             state.resolution = args.resolution
 
-        def formatter(results, state):
+        def formatter(results: dict, state: ScreenerState) -> None:
             outupt = datetime.now().strftime("%c") + ":\n"
             for symbol in results:
                 if results[symbol]["buy"]:
                     outupt += "[%s] %s\n" % (symbol, results[symbol]["buy"])
             print(outupt)
 
-        screener = Screener(
+        Screener(
             exchange,
             strategy.screener,
             symbols=args.symbols,
