@@ -1,6 +1,10 @@
 from blankly import StrategyState
 from blankly.indicators import macd, stochastic_rsi
 
+import numpy as np
+
+from pandas import Series
+
 from quantipy.strategies.simple import SimpleStrategy, event
 
 
@@ -19,17 +23,21 @@ class HarmonicOscillators(SimpleStrategy):
         return self.order(price, symbol, state, side="sell")
 
     def buy(self, symbol: str) -> bool:
+        rsi: Series = None
+        stoch_rsi_K: Series = None
+        stoch_rsi_D: Series = None
+
         rsi, stoch_rsi_K, stoch_rsi_D = stochastic_rsi(
             self.data[symbol]["close"]
         )
 
         # Both the %K and %D lines must have been below 20 recently
-        stride = 2
-        below_20_K = stoch_rsi_K < 20
-        below_20_D = stoch_rsi_D < 20
-        both_below_20 = below_20_K & below_20_D
-        lookback = both_below_20[-stride:]
-        both_below_20_occurred = lookback.any()
+        stride: int = 2
+        below_20_K: Series = stoch_rsi_K < 20
+        below_20_D: Series = stoch_rsi_D < 20
+        both_below_20: Series = below_20_K & below_20_D
+        lookback: Series = both_below_20[-stride:]
+        both_below_20_occurred: bool = lookback.any()
         if not both_below_20_occurred:
             return False
 
@@ -37,14 +45,18 @@ class HarmonicOscillators(SimpleStrategy):
         if rsi.iloc[-1] < 50:
             return False
 
-        macd_res, macd_sig, macd_hist = macd(self.data[symbol]["close"])
+        macd_res: np.ndarry = None
+        macd_sig: np.ndarry = None
+
+        # MACD Hist is unused
+        macd_res, macd_sig, _ = macd(self.data[symbol]["close"])
 
         # Check for MACD cross to confirm uptrend
-        slope = (macd_res[-1] - macd_res[-5]) / 5
-        prev_macd = macd_res[-2]
-        curr_macd = macd_res[-1]
-        curr_macd_s = macd_sig[-1]
-        cross = (slope > 0) and (curr_macd >= curr_macd_s > prev_macd)
+        slope: float = (macd_res[-1] - macd_res[-5]) / 5
+        prev_macd: float = macd_res[-2]
+        curr_macd: float = macd_res[-1]
+        curr_macd_s: float = macd_sig[-1]
+        cross: bool = (slope > 0) and (curr_macd >= curr_macd_s > prev_macd)
         if not cross:
             return False
 
@@ -54,17 +66,21 @@ class HarmonicOscillators(SimpleStrategy):
         return True
 
     def sell(self, symbol: str) -> bool:
+        rsi: Series = None
+        stoch_rsi_K: Series = None
+        stoch_rsi_D: Series = None
+
         rsi, stoch_rsi_K, stoch_rsi_D = stochastic_rsi(
             self.data[symbol]["close"]
         )
 
         # Both the %K and %D lines must have been above 80 recently
-        stride = 2
-        above_80_K = stoch_rsi_K > 80
-        above_80_D = stoch_rsi_D > 80
-        both_above_80 = above_80_K & above_80_D
-        lookback = both_above_80[-stride:]
-        both_above_80_occurred = lookback.any()
+        stride: int = 2
+        above_80_K: Series = stoch_rsi_K > 80
+        above_80_D: Series = stoch_rsi_D > 80
+        both_above_80: Series = above_80_K & above_80_D
+        lookback: Series = both_above_80[-stride:]
+        both_above_80_occurred: bool = lookback.any()
         if not both_above_80_occurred:
             return False
 
@@ -72,14 +88,18 @@ class HarmonicOscillators(SimpleStrategy):
         if rsi.iloc[-1] > 50:
             return False
 
-        macd_res, macd_sig, macd_hist = macd(self.data[symbol]["close"])
+        macd_res: np.ndarry = None
+        macd_sig: np.ndarry = None
+
+        # MACD Hist is unused
+        macd_res, macd_sig, _ = macd(self.data[symbol]["close"])
 
         # Check for MACD cross to confirm downtrend
-        slope = (macd_res[-1] - macd_res[-5]) / 5
-        prev_macd = macd_res[-2]
-        curr_macd = macd_res[-1]
-        curr_macd_s = macd_sig[-1]
-        cross = (slope < 0) and (curr_macd <= curr_macd_s < prev_macd)
+        slope: float = (macd_res[-1] - macd_res[-5]) / 5
+        prev_macd: float = macd_res[-2]
+        curr_macd: float = macd_res[-1]
+        curr_macd_s: float = macd_sig[-1]
+        cross: bool = (slope < 0) and (curr_macd <= curr_macd_s < prev_macd)
         if not cross:
             return False
 
