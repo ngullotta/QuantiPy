@@ -5,13 +5,16 @@ from pathlib import Path
 from bokeh.layouts import gridplot
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure, show
-from pandas import DataFrame, read_csv, to_datetime
+from pandas import DataFrame, read_csv, to_datetime, concat
 
 
-def get_price_data(symbol: str, start: int = None) -> DataFrame:
-    glob = "*%s,%s*.csv" % (symbol, str(start) if start else "")
-    for _file in Path("./price_caches").glob(glob):
-        return read_csv(_file)
+def get_price_data(symbol: str, start: int, end: int) -> DataFrame:
+    data = []
+    for _file in Path("./price_caches").glob("*%s*.csv" % symbol):
+        data.append(read_csv(_file))
+    df = concat(data)
+    df["time"] = df["time"].apply(lambda x: int(x))
+    return df.drop_duplicates(subset="time").sort_values(by="time")
 
 
 def main() -> None:  # noqa: C901
@@ -30,15 +33,6 @@ def main() -> None:  # noqa: C901
         help="Path of the backtest results",
     )
 
-    parser.add_argument(
-        "--start",
-        type=int,
-        help="""
-        The first history point time for the results. Helpful for getting the
-        right historical data to chart with
-        """,
-    )
-
     args = parser.parse_args()
 
     if not args.path.exists():
@@ -48,7 +42,8 @@ def main() -> None:  # noqa: C901
     with open(args.path) as fp:
         data = json.load(fp)
         orders = data["trades"]["created"]
-        start = args.start or int(data["history"][0]["time"])
+        start = int(data["start_time"])
+        end = int(data["stop_time"])
 
     df = DataFrame(orders)
     df["time"] = to_datetime(df["time"], unit="s")
@@ -91,7 +86,7 @@ def main() -> None:  # noqa: C901
         )
 
         # Plot symbol price as a grey line
-        if (data := get_price_data(symbol, start)) is not None:
+        if (data := get_price_data(symbol, start, end)) is not None:
             data["price"] = data["close"]
             data["time"] = to_datetime(data["time"], unit="s")
             p.line(
