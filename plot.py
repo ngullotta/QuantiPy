@@ -9,8 +9,9 @@ from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure, show
 
 
-def get_price_data(symbol: str) -> pd.DataFrame:
-    for _file in Path("./price_caches").glob(f"*{symbol}*.csv"):
+def get_price_data(symbol: str, start: float = None) -> pd.DataFrame:
+    glob = f"*{symbol}," + str(start) if start else "" + "*.csv"
+    for _file in Path("./price_caches").glob(f"*{symbol},*.csv"):
         return pd.read_csv(_file)
 
 
@@ -18,12 +19,8 @@ for _file in sys.argv[1:]:
     with open(_file) as fp:
         data = json.load(fp)
         orders = data["trades"]["created"]
-        start = datetime.fromtimestamp(data["history"][0]["time"]).strftime(
-            "%Y-%m-%d"
-        )
-        end = datetime.fromtimestamp(data["history"][-1]["time"]).strftime(
-            "%Y-%m-%d"
-        )
+        start = int(data["history"][0]["time"])
+        end = int(data["history"][-1]["time"])
         df = pd.DataFrame(orders)
         # Convert time strings to datetime objects
         df["time"] = df["time"].apply(lambda x: int(x))
@@ -71,7 +68,7 @@ for _file in sys.argv[1:]:
             )
 
             # Plot security price as a grey line
-            data = get_price_data(security)
+            data = get_price_data(security, start)
             data["price"] = data["close"]
             data["time"] = pd.to_datetime(data["time"], unit="s")
             print(data)
