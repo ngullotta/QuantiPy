@@ -590,6 +590,21 @@ pycodestyle = ">=2.12.0,<2.13.0"
 pyflakes = ">=3.2.0,<3.3.0"
 
 [[package]]
+name = "flake8-annotations"
+version = "3.1.1"
+description = "Flake8 Type Annotation Checks"
+optional = false
+python-versions = ">=3.8.1"
+files = [
+    {file = "flake8_annotations-3.1.1-py3-none-any.whl", hash = "sha256:102935bdcbfa714759a152aeb07b14aee343fc0b6f7c55ad16968ce3e0e91a8a"},
+    {file = "flake8_annotations-3.1.1.tar.gz", hash = "sha256:6c98968ccc6bdc0581d363bf147a87df2f01d0d078264b2da805799d911cf5fe"},
+]
+
+[package.dependencies]
+attrs = ">=21.4"
+flake8 = ">=5.0"
+
+[[package]]
 name = "frozendict"
 version = "2.4.4"
 description = "A simple immutable dictionary"
@@ -2326,4 +2341,4 @@ repair = ["scipy (>=1.6.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.13"
-content-hash = "1343b86f075a398d382c5e0a7bf1a04d25b4f5706c1e07cc29bb21483ddb99f9"
+content-hash = "35d32d31b4e29d3e9fac4709922049a9449eb438d9ff4ba32984757aa997003a"
