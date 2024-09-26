@@ -19,8 +19,6 @@ class SimpleStrategy(StrategyBase):
     def append_close(
         self, price: float, symbol: str, state: StrategyState
     ) -> None:
-        if not price:
-            return
         self.data[symbol]["close"].append(price)
 
     def tick(self, price: float, symbol: str, state: StrategyState) -> None:
