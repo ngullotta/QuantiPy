@@ -126,6 +126,13 @@ def main() -> None:  # noqa: C901
         help="When using symbol lists, use top X symbols",
     )
 
+    parser.add_argument(
+        "--dump-audit",
+        action="store_true",
+        default=False,
+        help="Dump the strategy audit log for analysis"
+    )
+
     if len(argv) > 1 and argv[1] == "-ls":
         print("Available strategies:")
         for st in sorted(STRATEGIES.keys()):
@@ -193,6 +200,9 @@ def main() -> None:  # noqa: C901
             with open(f"{args.strategy.__name__}_results.json", "w") as fp:
                 json.dump(res.to_dict(), fp, indent=4)
                 logger.info("Wrote backtest results to `%s`", fp.name)
+        if args.dump_audit and strategy._audit != {}:
+            with open(f"{strategy.__class__.__name__}_audit.json", "w") as fp:
+                json.dump(strategy._audit, fp, indent=4)
         exit()
 
     if args.as_screener:

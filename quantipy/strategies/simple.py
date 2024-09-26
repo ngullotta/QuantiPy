@@ -113,3 +113,14 @@ class SimpleStrategy(StrategyBase):
             symbol, 800, resolution=state.resolution, return_as="deque"
         )
         return {"buy": self.buy(symbol)}
+
+    def audit(self, symbol: str, event: str, message: str, **kwargs) -> None:
+        obj = {
+            "time": int(self.time()),
+            "event": event,
+            "message": message,
+        }
+
+        obj.update(**kwargs)
+
+        self._audit[symbol].append(obj)

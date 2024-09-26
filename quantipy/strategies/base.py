@@ -32,6 +32,7 @@ class StrategyBase(Strategy):
         self.logger.info("Using strategy: %s", self.__class__.__name__)
         super().__init__(exchange)
         self.interface: ExchangeInterface = exchange.interface
+        self._audit = defaultdict(list)
 
     @classmethod
     def register_event_callback(cls, event: str, callback: Callback) -> bool:
