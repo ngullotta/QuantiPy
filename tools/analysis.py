@@ -40,7 +40,6 @@ def main() -> None:  # noqa: C901
         for symbol, orders in orders_list.items():
             wins = 0
             for buy, sell in zip(orders[::2], orders[1::2]):
-                print(buy, sell)
                 if buy["price"] < sell["price"]:
                     wins += 1
             overall_wins += wins
