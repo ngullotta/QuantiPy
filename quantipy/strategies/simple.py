@@ -8,7 +8,7 @@ from quantipy.strategies.split_protector import SplitProtector
 
 class SimpleStrategy(StrategyBase):
 
-    protector = SplitProtector("splits.json")
+    protector: SplitProtector = SplitProtector("splits.json")
 
     def init(self, symbol: str, state: StrategyState) -> None:
         self.data[symbol] = state.interface.history(
@@ -52,12 +52,28 @@ class SimpleStrategy(StrategyBase):
     @staticmethod
     def order_to_str(order: MarketOrder) -> str:
         data: dict = order.get_response()
-        return "(%s) [%s] %.2f of -> %s" % (
+        return "(%s) [%s] %.8f of -> %s" % (
             int(data["created_at"]),
             data["side"],
             data["size"],
             data["symbol"],
         )
+
+    def get_quantity(
+        self,
+        price: float,
+        symbol: str,
+        state: StrategyState,
+        pct: float = 0.01,
+        stop_loss: float = 0.05,
+        precision: int = 4,
+    ) -> float:
+        if self.positions[symbol].get("open"):
+            return trunc(self.account[state.base_asset].available, precision)
+        # Risk management I guess?
+        # Cash = Risk amount / Stop loss percentage
+        cash = (self.cash * pct) / stop_loss
+        return trunc(cash / price, precision)
 
     def order(
         self,
@@ -65,19 +81,12 @@ class SimpleStrategy(StrategyBase):
         symbol: str,
         state: StrategyState,
         side: str = "buy",
-        pct: float = 1.0,
+        pct: float = 0.01,
+        stop_loss: float = 0.05,
     ) -> float:
-        # If we're buying divide our cash (or percentage of cash) by
-        # unit price. Otherwise sell the whole smash
-        quantity: float = 0.0
-        if side == "buy":
-            quantity = (self.cash * pct) / price
-        else:
-            quantity = self.account[state.base_asset].available
-
-        # Rounding to 4 decimals should be enough for both regular
-        # stocks (with fractional shares) and crypto exchanges
-        quantity: float = trunc(quantity, 4)
+        quantity: float = self.get_quantity(
+            price, symbol, state, pct=pct, stop_loss=stop_loss
+        )
 
         if not quantity:
             return 0.0
