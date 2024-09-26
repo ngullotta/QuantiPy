@@ -36,22 +36,16 @@ def main() -> None:  # noqa: C901
                 {"side": order["side"], "price": order["price"]}
             )
 
-        overall_wins, total = 0, 0
         for symbol, orders in orders_list.items():
-            wins = 0
+            wins, pairs = 0, 0
             for buy, sell in zip(orders[::2], orders[1::2]):
+                pairs += 1
                 if buy["price"] < sell["price"]:
                     wins += 1
-            overall_wins += wins
-            total += len(orders)
             print(
-                "Win Percentage [%s] (%.2f) => %d wins / %d total orders"
-                % (symbol, wins / len(orders), wins, len(orders))
+                "Win Percentage [%s] ~> (%d%%) => %d wins / %d trades"
+                % (symbol, int((wins / pairs) * 100), wins, pairs)
             )
-        print(
-            "Win Percentage [Overall] (%.2f) => %d wins / %d total orders"
-            % (wins / total, overall_wins, total)
-        )
 
 
 if __name__ == "__main__":
