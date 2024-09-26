@@ -41,7 +41,13 @@ class StrategyBase(Strategy):
 
     def run_callbacks(self, _type: str, *args, **kwargs) -> None:
         for fn in self.callbacks[_type]:
-            fn(self, *args, **kwargs)
+            # This is the worst thing I've ever written.
+            # Why did I use @event decorators with class variables :^)
+            if fn.__qualname__.split(".")[0] in [
+                "SimpleStrategy",
+                self.__class__.__name__,
+            ]:
+                fn(self, *args, **kwargs)
 
     def buy(self) -> bool:
         return False
