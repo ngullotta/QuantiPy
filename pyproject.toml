@@ -12,6 +12,7 @@ blankly = "^1.18.25b0"
 numpy = "1.26.1"
 croniter = "^3.0.3"
 yfinance = "^0.2.43"
+ta = "^0.11.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.8.0"
