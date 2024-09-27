@@ -1,6 +1,5 @@
 import numpy as np
 from blankly import StrategyState
-from blankly.indicators import macd, stochastic_rsi
 from pandas import Series
 from ta.momentum import RSIIndicator, StochRSIIndicator
 from ta.trend import MACD
@@ -17,8 +16,8 @@ class HarmonicOscillators(SimpleStrategy):
     # Lookback period for the %K and %D checks
     stride: int = 5
 
-    stop_loss_pct: float = 0.075
-    risk_ratio = 2
+    stop_loss_pct: float = 0.10
+    risk_ratio = 5
     take_profit_pct: float = stop_loss_pct * risk_ratio
 
     @event("tick")
@@ -32,28 +31,26 @@ class HarmonicOscillators(SimpleStrategy):
         take_profit: float = entry * (1 + self.take_profit_pct)
         stop_loss: float = entry * (1 - self.stop_loss_pct)
 
-        # if price >= take_profit or price <= stop_loss:
-        #     message = "Take Profit" if price >= take_profit else "Stop Loss"
-        #     data = {
-        #         "price": price,
-        #         "entry": entry,
-        #         "take_profit": take_profit,
-        #         "stop_loss": stop_loss,
-        #     }
-        #     self.audit(symbol, "sell", message, **data)
-        #     self.s(price, symbol, state)
+        if price >= take_profit or price <= stop_loss:
+            message = "Take Profit" if price >= take_profit else "Stop Loss"
+            data = {
+                "price": price,
+                "entry": entry,
+                "take_profit": take_profit,
+                "stop_loss": stop_loss,
+            }
+            self.audit(symbol, "sell", message, **data)
+            self.s(price, symbol, state)
 
     @event("buy")
     def b(self, price: float, symbol: str, state: StrategyState) -> float:
-        return self.order(
-            price, symbol, state, pct=0.75, stop_loss=1
-        )
+        return self.order(price, symbol, state, pct=0.75, stop_loss=1)
 
     @event("sell")
     def s(self, price: float, symbol: str, state: StrategyState) -> float:
         return self.order(price, symbol, state, side="sell")
 
-    def buy(self, symbol: str) -> bool:
+    def buy(self, symbol: str) -> bool:  # noqa: C901
         close = Series(self.data[symbol]["close"])
 
         stoch = StochRSIIndicator(close)
@@ -71,10 +68,10 @@ class HarmonicOscillators(SimpleStrategy):
         below_20_K: Series = stoch_rsi_K < 20
         below_20_D: Series = stoch_rsi_D < 20
 
-        if not below_20_K[-self.stride:].any():
+        if not below_20_K[-self.stride :].any():
             return False
 
-        if not below_20_D[-self.stride:].any():
+        if not below_20_D[-self.stride :].any():
             return False
 
         both_below_20_occured = False
@@ -139,7 +136,7 @@ class HarmonicOscillators(SimpleStrategy):
 
         return True
 
-    def sell(self, symbol: str) -> bool:
+    def sell(self, symbol: str) -> bool:  # noqa: C901
         close = Series(self.data[symbol]["close"])
 
         stoch = StochRSIIndicator(close)
@@ -157,16 +154,16 @@ class HarmonicOscillators(SimpleStrategy):
         above_80_K: Series = stoch_rsi_K > 80
         above_80_D: Series = stoch_rsi_D > 80
 
-        if not above_80_K[-self.stride:].any():
+        if not above_80_K[-self.stride :].any():
             return False
 
-        if not above_80_D[-self.stride:].any():
+        if not above_80_D[-self.stride :].any():
             return False
 
         last_k, last_d = -1, -1
         both_above_80_occurred = True
         for k, d in zip(
-            stoch_rsi_K[-self.stride:], stoch_rsi_D[-self.stride:]
+            stoch_rsi_K[-self.stride :], stoch_rsi_D[-self.stride :]
         ):
             if not (k > last_k and d > last_d):
                 both_above_80_occurred = False

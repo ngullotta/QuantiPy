@@ -11,7 +11,7 @@ def main() -> None:
         description="""
         CLI tool to add split timestamps to the slipts file.
 
-        Timestamps are calculated in US/Eastern offsets unless otherwise 
+        Timestamps are calculated in US/Eastern offsets unless otherwise
         specified.
         """
     )
