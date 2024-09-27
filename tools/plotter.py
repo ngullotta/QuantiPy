@@ -2,10 +2,11 @@ import json
 from argparse import ArgumentParser
 from pathlib import Path
 
-from bokeh.layouts import gridplot
+from bokeh.layouts import column, gridplot
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure, show
 from pandas import DataFrame, concat, read_csv, to_datetime, to_numeric
+from ta.momentum import RSIIndicator, StochRSIIndicator
 
 
 def get_price_data(symbol: str, start: int, end: int) -> DataFrame:
@@ -89,6 +90,14 @@ def main() -> None:  # noqa: C901
         if (data := get_price_data(symbol, start, end)) is not None:
             data["price"] = data["close"]
             data["time"] = to_datetime(data["time"], unit="s")
+            data["rsi"] = RSIIndicator(data["close"]).rsi()
+            data["stoch_rsi"] = StochRSIIndicator(data["close"]).stochrsi()
+            data["stoch_rsi_k"] = (
+                StochRSIIndicator(data["close"]).stochrsi_k() * 100
+            )
+            data["stoch_rsi_d"] = (
+                StochRSIIndicator(data["close"]).stochrsi_d() * 100
+            )
             p.line(
                 x="time",
                 y="price",
@@ -103,10 +112,66 @@ def main() -> None:  # noqa: C901
         p.xaxis.axis_label = "Time"
         p.yaxis.axis_label = "Price"
 
-        plots.append(p)
+        volume_plot = figure(
+            title="Volume",
+            tools="xpan, xwheel_zoom, reset",
+            x_axis_type="datetime",
+            width=800,
+            height=100,
+            x_range=p.x_range,
+        )
+
+        volume_plot.vbar(
+            x="time",
+            top="volume",
+            width=86400 * 1000,
+            color="blue",
+            source=ColumnDataSource(data),
+        )
+
+        rsi_plot = figure(
+            title="RSI",
+            tools="xpan, xwheel_zoom, reset",
+            x_axis_type="datetime",
+            width=800,
+            height=200,
+            x_range=p.x_range,
+        )
+        rsi_plot.line(
+            x="time",
+            y="rsi",
+            line_width=2,
+            color="orange",
+            source=ColumnDataSource(data),
+        )
+
+        stoch_rsi_plot = figure(
+            title="RSI",
+            tools="xpan, xwheel_zoom, reset",
+            x_axis_type="datetime",
+            width=800,
+            height=200,
+            x_range=p.x_range,
+        )
+        stoch_rsi_plot.line(
+            x="time",
+            y="stoch_rsi_k",
+            line_width=2,
+            color="blue",
+            source=ColumnDataSource(data),
+        )
+        stoch_rsi_plot.line(
+            x="time",
+            y="stoch_rsi_d",
+            line_width=2,
+            color="orange",
+            source=ColumnDataSource(data),
+        )
+
+        plots.append(column(p, volume_plot, stoch_rsi_plot, rsi_plot))
 
     # Arrange plots in a grid
-    grid = gridplot(plots, ncols=2)
+    grid = gridplot(plots, ncols=1)
     show(grid)
 
 
