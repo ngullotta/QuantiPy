@@ -130,7 +130,7 @@ def main() -> None:  # noqa: C901
         "--dump-audit",
         action="store_true",
         default=False,
-        help="Dump the strategy audit log for analysis"
+        help="Dump the strategy audit log for analysis",
     )
 
     if len(argv) > 1 and argv[1] == "-ls":
