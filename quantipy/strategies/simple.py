@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from blankly import ScreenerState, StrategyState
 from blankly.exchanges.orders.market_order import MarketOrder
 from blankly.utils import trunc
@@ -117,6 +119,9 @@ class SimpleStrategy(StrategyBase):
     def audit(self, symbol: str, event: str, message: str, **kwargs) -> None:
         obj = {
             "time": int(self.time()),
+            "date_string": datetime.fromtimestamp(int(self.time())).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
             "event": event,
             "message": message,
         }
