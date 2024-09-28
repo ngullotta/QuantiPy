@@ -50,7 +50,7 @@ class HarmonicOscillators(SimpleStrategy):
 
     @event("buy")
     def b(self, price: float, symbol: str, state: StrategyState) -> float:
-        return self.order(price, symbol, state, pct=0.05, stop_loss=self.stop_loss_pct)
+        return self.order(price, symbol, state, pct=0.03, stop_loss=self.stop_loss_pct)
 
     @event("sell")
     def s(self, price: float, symbol: str, state: StrategyState) -> float:
