@@ -80,8 +80,8 @@ class SimpleStrategy(StrategyBase):
         # Cash = Risk amount / Stop loss percentage
         cash = self.clamp(
             (self.cash * pct) / stop_loss,
-            0,
             self.cash,
+            0,
         )
         return trunc(cash / price, precision)
 
@@ -99,6 +99,7 @@ class SimpleStrategy(StrategyBase):
         )
 
         if not quantity:
+            self.logger.warn("Attempted to buy %s quantity 0", symbol)
             return 0.0
 
         # Do the actual order now
