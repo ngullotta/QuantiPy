@@ -61,6 +61,10 @@ class SimpleStrategy(StrategyBase):
             data["symbol"],
         )
 
+    @staticmethod
+    def clamp(value: float, _max: float, _min: float) -> float:
+        return max(min(value, _max), _min)
+
     def get_quantity(
         self,
         price: float,
@@ -74,7 +78,11 @@ class SimpleStrategy(StrategyBase):
             return trunc(self.account[state.base_asset].available, precision)
         # Risk management I guess?
         # Cash = Risk amount / Stop loss percentage
-        cash = (self.cash * pct) / stop_loss
+        cash = self.clamp(
+            (self.cash * pct) / stop_loss,
+            0,
+            self.cash,
+        )
         return trunc(cash / price, precision)
 
     def order(
@@ -105,6 +113,9 @@ class SimpleStrategy(StrategyBase):
         self.positions[symbol]["open"]: bool = (
             side == "buy" and data["status"] == "done"
         )
+
+        if self.positions[symbol]["open"]:
+            self.positions[symbol].pop("trailing_stop", None)
 
         self.positions[symbol]["entry"] = price
 
