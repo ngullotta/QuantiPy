@@ -99,7 +99,7 @@ class SimpleStrategy(StrategyBase):
         )
 
         if not quantity:
-            self.logger.warn("Attempted to buy %s quantity 0", symbol)
+            self.logger.warning("Attempted to buy %s quantity 0", symbol)
             return 0.0
 
         # Do the actual order now
