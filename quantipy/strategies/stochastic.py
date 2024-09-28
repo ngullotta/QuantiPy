@@ -13,12 +13,10 @@ class HarmonicOscillators(SimpleStrategy):
     the MACD all working in concert.
     """
 
-    # Lookback period for the %K and %D checks
     stride: int = 5
 
-    stop_loss_pct: float = 0.10
-    risk_ratio = 5
-    take_profit_pct: float = stop_loss_pct * risk_ratio
+    stop_loss_pct: float = 0.05
+    risk_ratio: int = 4
 
     @event("tick")
     def take_profit_or_stop_loss(
@@ -28,10 +26,18 @@ class HarmonicOscillators(SimpleStrategy):
             return
 
         entry: float = self.positions[symbol]["entry"]
-        take_profit: float = entry * (1 + self.take_profit_pct)
+        take_profit: float = entry * (1 + (self.stop_loss_pct * self.risk_ratio))
         stop_loss: float = entry * (1 - self.stop_loss_pct)
 
-        if price >= take_profit or price <= stop_loss:
+        # Initialize stop_loss if not already set
+        if "trailing_stop" not in self.positions[symbol]:
+            self.positions[symbol]["trailing_stop"] = entry * (1 - self.stop_loss_pct)
+
+        # Update trailing stop if price moves higher
+        if price > self.positions[symbol]["trailing_stop"]:
+            self.positions[symbol]["trailing_stop"] = price * (1 - self.stop_loss_pct)
+
+        if price >= take_profit or price <= self.positions[symbol]["trailing_stop"]:
             message = "Take Profit" if price >= take_profit else "Stop Loss"
             data = {
                 "price": price,
@@ -44,7 +50,7 @@ class HarmonicOscillators(SimpleStrategy):
 
     @event("buy")
     def b(self, price: float, symbol: str, state: StrategyState) -> float:
-        return self.order(price, symbol, state, pct=0.75, stop_loss=1)
+        return self.order(price, symbol, state, pct=0.05, stop_loss=self.stop_loss_pct)
 
     @event("sell")
     def s(self, price: float, symbol: str, state: StrategyState) -> float:
@@ -98,24 +104,11 @@ class HarmonicOscillators(SimpleStrategy):
         macd_line: np.ndarry = None
         macd_signal: np.ndarry = None
 
-        # MACD Hist is unused
         macd = MACD(close)
         macd_line, macd_signal = macd.macd(), macd.macd_signal()
 
-        # Sanity check, must have `minimum_num_points` or more points
-        # to check. This is so we can calculate the slope correctly
-        minimum_num_points = 5
-        lengths = [len(macd_line), len(macd_signal)]
-        if any([length < minimum_num_points for length in lengths]):
-            return False
-
         # Check for MACD cross to confirm uptrend
-        slope: float = (macd_line.iloc[-1] - macd_line.iloc[-5]) / 5
-        prev_macd: float = macd_line.iloc[-2]
-        curr_macd: float = macd_line.iloc[-1]
-        curr_macd_s: float = macd_signal.iloc[-1]
-        crossing_up: bool = slope > 0 and curr_macd >= curr_macd_s > prev_macd
-        if not crossing_up:
+        if not macd_line.iloc[-1] >= macd_signal.iloc[-1]:
             return False
 
         # Finally ensure that both stochastic lines are not overbought
@@ -126,10 +119,8 @@ class HarmonicOscillators(SimpleStrategy):
             "stoch_K": list(stoch_rsi_K)[-self.stride :],
             "stoch_D": list(stoch_rsi_D)[-self.stride :],
             "rsi": rsi.iloc[-1],
-            "macd_slope": slope,
-            "curr_macd": curr_macd,
-            "curr_macd_signal": curr_macd_s,
-            "prev_macd": prev_macd,
+            "curr_macd": macd_line.iloc[-1],
+            "curr_macd_signal": macd_signal.iloc[-1],
         }
 
         self.audit(symbol, "buy", "Signal hit", **data)
@@ -181,24 +172,11 @@ class HarmonicOscillators(SimpleStrategy):
         macd_line: np.ndarry = None
         macd_signal: np.ndarry = None
 
-        # MACD Hist is unused
         macd = MACD(close)
         macd_line, macd_signal = macd.macd(), macd.macd_signal()
 
-        # Sanity check, must have `minimum_num_points` or more points
-        # to check. This is so we can calculate the slope correctly
-        minimum_num_points = 5
-        lengths = [len(macd_line), len(macd_signal)]
-        if any([length < minimum_num_points for length in lengths]):
-            return False
-
         # Check for MACD cross to confirm downtrend
-        slope: float = (macd_line.iloc[-1] - macd_line.iloc[-5]) / 5
-        prev_macd: float = macd_line.iloc[-2]
-        curr_macd: float = macd_line.iloc[-1]
-        curr_macd_s: float = macd_signal.iloc[-1]
-        crossing_down: bool = curr_macd <= curr_macd_s
-        if not crossing_down:
+        if not macd_line.iloc[-1] <= macd_signal.iloc[-1]:
             return False
 
         # Finally ensure that both stochastic lines are not oversold
@@ -209,10 +187,8 @@ class HarmonicOscillators(SimpleStrategy):
             "stoch_K": list(stoch_rsi_K)[-self.stride :],
             "stoch_D": list(stoch_rsi_D)[-self.stride :],
             "rsi": rsi.iloc[-1],
-            "macd_slope": slope,
-            "curr_macd": curr_macd,
-            "curr_macd_signal": curr_macd_s,
-            "prev_macd": prev_macd,
+            "curr_macd": macd_line.iloc[-1],
+            "curr_macd_signal": macd_signal.iloc[-1],
         }
 
         self.audit(symbol, "sell", "Signal hit", **data)
