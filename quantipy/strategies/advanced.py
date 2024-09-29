@@ -139,8 +139,8 @@ class TradeManager:
             return 0.0
 
         if side == "buy":
-            # This is a *new* regular "long" order
-            if pos is None:
+            # This is a regular "long" order
+            if pos is None or pos.state == TradeState.READY_NEXT:
                 res: dict = self.__order_internal(
                     symbol, side, quantity, state
                 )
