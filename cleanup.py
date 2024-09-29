@@ -8,3 +8,7 @@ if __name__ == "__main__":
     # Graphs
     for _file in Path(".").glob("*.html"):
         _file.unlink()
+
+    # Audit logs
+    for _file in Path(".").glob("*_audit.json"):
+        _file.unlink
