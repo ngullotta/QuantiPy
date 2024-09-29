@@ -8,9 +8,10 @@ from sys import argv
 from blankly import Alpaca, Binance, PaperTrade, Screener, ScreenerState
 
 from quantipy.logger import QuantiPyLogger
-from quantipy.strategies import HarmonicOscillators, Oversold
+from quantipy.strategies import HarmonicOscillators, Oversold, AdvancedHarmonicOscillators
 
 STRATEGIES = {
+    "AdvancedHarmonicOscillators": AdvancedHarmonicOscillators,
     "HarmonicOscillators": HarmonicOscillators,
     "Oversold": Oversold,
 }

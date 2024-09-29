@@ -32,6 +32,8 @@ class StrategyBase(Strategy):
         self.logger.info("Using strategy: %s", self.__class__.__name__)
         super().__init__(exchange)
         self.interface: ExchangeInterface = exchange.interface
+        self.preferences = self.interface.user_preferences
+        self.settings = self.preferences.get("settings", {})
         self._audit = defaultdict(list)
 
     @classmethod
@@ -46,6 +48,7 @@ class StrategyBase(Strategy):
             # Why did I use @event decorators with class variables :^)
             if fn.__qualname__.split(".")[0] in [
                 "SimpleStrategy",
+                "AdvancedStrategy",
                 self.__class__.__name__,
             ]:
                 fn(self, *args, **kwargs)

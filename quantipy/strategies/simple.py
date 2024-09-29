@@ -23,25 +23,39 @@ class SimpleStrategy(StrategyBase):
     ) -> None:
         self.data[symbol]["close"].append(price)
 
-    def tick(self, price: float, symbol: str, state: StrategyState) -> None:
-        args: tuple = (price, symbol, state)
-
-        self.run_callbacks("tick", *args)
-
+    def safe(self, symbol: str) -> bool:
         if symbol in self.blacklist:
-            return
+            return False
 
         # Avoid splits when backtesting
         if not self.protector.safe(symbol, self.time()):
             # If we have an open position, exit it immediately
             if self.positions[symbol].get("open"):
                 self.run_callbacks("sell", *args)
+            return False
+        return True
+
+    def tick(self, price: float, symbol: str, state: StrategyState) -> None:
+        args: tuple = (price, symbol, state)
+
+        self.run_callbacks("tick", *args)
+
+        if not self.safe(symbol):
             return
 
-        if self.positions[symbol].get("open") and self.sell(symbol):
-            self.run_callbacks("sell", *args)
-        elif not self.positions[symbol].get("open") and self.buy(symbol):
-            self.run_callbacks("buy", *args)
+        position: dict = self.positions[symbol]
+        _type: str = position.get("type")
+        _open: bool = position.get("open")
+
+        if _type in ["long"] or _type is None:
+            if _open and self.sell(symbol):
+                self.run_callbacks("sell", *args)
+            elif not _open and self.buy(symbol):
+                self.run_callbacks("buy", *args)
+        elif _type in ["short"]:
+            if _open and self.buy(symbol):
+                self.run_callbacks("buy", *args)
+
 
     @property
     def cash(self) -> float:
@@ -74,7 +88,7 @@ class SimpleStrategy(StrategyBase):
         stop_loss: float = 0.05,
         precision: int = 4,
     ) -> float:
-        if self.positions[symbol].get("open"):
+        if self.positions[symbol].get("open") and not self.positions[symbol].get("type") == "short":
             return trunc(self.account[state.base_asset].available, precision)
         # Risk management I guess?
         # Cash = Risk amount / Stop loss percentage
@@ -114,6 +128,8 @@ class SimpleStrategy(StrategyBase):
         self.positions[symbol]["open"]: bool = (
             side == "buy" and data["status"] == "done"
         )
+
+        self.positions[symbol]["type"] = "long"
 
         if self.positions[symbol]["open"]:
             self.positions[symbol].pop("trailing_stop", None)
