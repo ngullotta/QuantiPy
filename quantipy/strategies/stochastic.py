@@ -38,22 +38,17 @@ class AdvancedHarmonicOscillators(AdvancedStrategy):
 
         # Close our long if applicable
         if pos is not None and pos.state == TradeState.LONGING:
-            self.trade_manager.order(
-                price,
-                symbol,
-                state,
-                side="sell"
-            )
+            self.trade_manager.order(price, symbol, state, side="sell")
 
         # Open a short
         return self.trade_manager.order(
-                price,
-                symbol,
-                state,
-                side="sell",
-                pct=0.03,
-                stop_loss=self.STOP_LOSS_PCT
-            )
+            price,
+            symbol,
+            state,
+            side="sell",
+            pct=0.03,
+            stop_loss=self.STOP_LOSS_PCT,
+        )
 
     def buy(self, symbol: str) -> bool:  # noqa: C901
         close = Series(self.data[symbol]["close"])

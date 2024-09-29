@@ -195,7 +195,7 @@ class TradeManager:
                     open=not (side == "sell" and res["status"] == "done"),
                     entry=price,
                     stop_loss=-math.inf,
-                    take_profit=math.inf
+                    take_profit=math.inf,
                 )
                 return res["size"]
         return 0.0
@@ -234,22 +234,31 @@ class AdvancedStrategy(SimpleStrategy):
     def stop_loss(
         self, price: float, symbol: str, state: StrategyState
     ) -> None:
-        pos: Union[Position, None] = self.trade_manager.get_position(symbol)
+        pos: Union[Position, None] = self.trade_manager.get_position(
+            state.base_asset
+        )
         if pos is None or not pos.open:
             return
 
         if pos.state == TradeState.LONGING and price <= pos.stop_loss:
             self.trade_manager.order(price, symbol, state, side="sell")
+            return
         elif pos.state == TradeState.SHORTING and price >= pos.stop_loss:
             self.trade_manager.order(price, symbol, state, side="buy")
+            return
 
         # Move stop loss if price moves in our favor (Trailing Stop)
-        # if pos.state == TradeState.LONGING:
-        #     if price > pos.stop_loss:
-        #         pos.stop_loss = 1 - self.STOP_LOSS_PCT
-        # elif pos.state == TradeState.SHORTING:
-        #     if price < pos.stop_loss:
-        #         pos.stop_loss = 1 + (self.STOP_LOSS_PCT * self.RISK_RATIO)
+        if pos.state == TradeState.LONGING:
+            if price > pos.stop_loss:
+                self.trade_manager.update_position(
+                    state.base_asset, stop_loss=price * (1 - self.STOP_LOSS_PCT)
+                )
+        elif pos.state == TradeState.SHORTING:
+            if price < pos.stop_loss:
+                self.trade_manager.update_position(
+                    state.base_asset,
+                    stop_loss=max(price, price * (1 - 0.01)),
+                )
 
     def tick(self, price: float, symbol: str, state: StrategyState) -> None:
         args: tuple = (price, symbol, state)
