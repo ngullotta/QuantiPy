@@ -67,7 +67,7 @@ class TradeManager:
             int(data["created_at"]),
             data["side"],
             data["size"],
-            data["symbol"],
+            data["symbol"]
         )
 
     def log_order(self, order: MarketOrder) -> None:
@@ -138,7 +138,7 @@ class TradeManager:
                 res: dict = self.__order_internal(
                     symbol, side, quantity, state
                 )
-                self.new_position(
+                pos: Position = self.new_position(
                     state.base_asset,
                     state=TradeState.LONGING,
                     open=(side == "buy" and res["status"] == "done"),
@@ -146,6 +146,7 @@ class TradeManager:
                     stop_loss=price * (1 - stop_loss),
                     take_profit=price * (1 + (stop_loss * risk_ratio)),
                 )
+                self.logger.info("%s", pos)
                 return res["size"]
 
             # This is a short position buy back now
@@ -153,7 +154,7 @@ class TradeManager:
                 res: dict = self.__order_internal(
                     symbol, side, quantity, state
                 )
-                self.update_position(
+                pos: Position = self.update_position(
                     state.base_asset,
                     state=TradeState.READY_NEXT,
                     open=not (side == "buy" and res["status"] == "done"),
@@ -161,6 +162,7 @@ class TradeManager:
                     stop_loss=-math.inf,
                     take_profit=math.inf,
                 )
+                self.logger.info("%s", pos)
                 return res["size"]
         elif side == "sell":
             # We're going to short this
@@ -168,7 +170,7 @@ class TradeManager:
                 res: dict = self.__order_internal(
                     symbol, side, quantity, state
                 )
-                self.update_position(
+                pos: Position = self.update_position(
                     state.base_asset,
                     state=TradeState.SHORTING,
                     open=(side == "sell" and res["status"] == "done"),
@@ -176,6 +178,7 @@ class TradeManager:
                     stop_loss=price * (1 + stop_loss),
                     take_profit=price * (1 - (stop_loss * risk_ratio)),
                 )
+                self.logger.info("%s", pos)
                 return res["size"]
 
             # This is a long position, sell the whole smash
@@ -183,7 +186,7 @@ class TradeManager:
                 res: dict = self.__order_internal(
                     symbol, side, quantity, state
                 )
-                self.update_position(
+                pos: Position = self.update_position(
                     state.base_asset,
                     state=TradeState.READY_NEXT,
                     open=not (side == "sell" and res["status"] == "done"),
@@ -191,6 +194,7 @@ class TradeManager:
                     stop_loss=-math.inf,
                     take_profit=math.inf,
                 )
+                self.logger.info("%s", pos)
                 return res["size"]
         return 0.0
 
