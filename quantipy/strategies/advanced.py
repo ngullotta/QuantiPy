@@ -53,14 +53,6 @@ class TradeManager:
     def clamp(value: float, _max: float, _min: float) -> float:
         return max(min(value, _max), _min)
 
-    @property
-    def cash(self) -> float:
-        return self.interface.cash
-
-    @property
-    def account(self) -> dict:
-        return self.interface.account
-
     def get_position(self, symbol: str) -> Union[Position, None]:
         return self.positions.get(symbol)
 
@@ -97,7 +89,9 @@ class TradeManager:
         # the quantity using `Cash = Risk amount / Stop loss percentage`
         if pos is None or not pos.open:
             cash: float = self.clamp(
-                (self.cash * pct) / stop_loss, self.cash, 0
+                (state.interface.cash * pct) / stop_loss,
+                state.interface.cash,
+                0,
             )
             return trunc(cash / price, precision)
 
@@ -251,7 +245,8 @@ class AdvancedStrategy(SimpleStrategy):
         if pos.state == TradeState.LONGING:
             if price > pos.stop_loss:
                 self.trade_manager.update_position(
-                    state.base_asset, stop_loss=price * (1 - self.STOP_LOSS_PCT)
+                    state.base_asset,
+                    stop_loss=price * (1 - self.STOP_LOSS_PCT),
                 )
         elif pos.state == TradeState.SHORTING:
             if price < pos.stop_loss:
