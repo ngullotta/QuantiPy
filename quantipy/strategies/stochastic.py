@@ -38,7 +38,7 @@ class AdvancedHarmonicOscillators(AdvancedStrategy):
 
         # Close our long if applicable
         if pos is not None and pos.state == TradeState.LONGING:
-            self.trade_manager.order(price, symbol, state, side="sell")
+            return self.trade_manager.order(price, symbol, state, side="sell")
 
         # Open a short
         return self.trade_manager.order(
