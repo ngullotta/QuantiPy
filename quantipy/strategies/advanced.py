@@ -256,7 +256,7 @@ class AdvancedStrategy(SimpleStrategy):
             if price < pos.stop_loss:
                 self.trade_manager.update_position(
                     state.base_asset,
-                    stop_loss=max(price, price * (1 - 0.01)),
+                    stop_loss=price * (1 + self.STOP_LOSS_PCT),
                 )
 
     def tick(self, price: float, symbol: str, state: StrategyState) -> None:
