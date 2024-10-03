@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Bot (Alpaca/ASFT)",
+            "name": "Bot (Alpaca/MSFT)",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/run.py",
@@ -30,7 +30,7 @@
             "program": "${workspaceFolder}/run.py",
             "console": "integratedTerminal",
             "args": [
-                "StochasticRSIWithRSIAndMACD",
+                "AdvancedHarmonicOscillators",
                 "Binance",
                 "--symbol",
                 "ETH-USDT",
@@ -54,6 +54,15 @@
                 "--as-screener",
                 "--all-symbols"
             ],
+            "justMyCode": false
+        },
+        {
+            "name": "Python: Debug Tests",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "purpose": ["debug-test"],
+            "console": "integratedTerminal",
             "justMyCode": false
         }
     ]
