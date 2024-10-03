@@ -1,18 +1,16 @@
 import logging
 import math
-from datetime import datetime
 from collections import namedtuple
-from typing import Dict, Union
+from datetime import datetime
 from enum import IntEnum, auto
+from typing import Dict, Union
 
 from blankly import ScreenerState, StrategyState
+from blankly.exchanges.interfaces.exchange_interface import ExchangeInterface
 from blankly.exchanges.orders.market_order import MarketOrder
 from blankly.utils import trunc
 
 from quantipy.strategies.simple import SimpleStrategy, event
-
-from blankly.exchanges.interfaces.exchange_interface import ExchangeInterface
-
 
 Position = namedtuple(
     "Position",

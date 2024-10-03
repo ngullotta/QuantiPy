@@ -33,14 +33,23 @@ def main() -> None:  # noqa: C901
         for order in orders:
             symbol = order["symbol"]
             orders_list[symbol].append(
-                {"side": order["side"], "price": order["price"], "size": order["size"]}
+                {
+                    "side": order["side"],
+                    "price": order["price"],
+                    "size": order["size"],
+                }
             )
 
         profit, loss = 0, 0
         for symbol, orders in orders_list.items():
             wins, pairs = 0, 0
             for buy, sell in zip(orders[::2], orders[1::2]):
-                buy_p, sell_p, buy_q, sell_q = buy["price"], sell["price"], buy["size"], sell["size"]
+                buy_p, sell_p, buy_q, sell_q = (
+                    buy["price"],
+                    sell["price"],
+                    buy["size"],
+                    sell["size"],
+                )
                 pairs += 1
                 if buy["price"] < sell["price"]:
                     profit += (sell_p * sell_q) - (buy_p * buy_q)
@@ -56,6 +65,7 @@ def main() -> None:  # noqa: C901
         print("Net $%.2f" % (profit + loss))
         print("Profit factor %.2f" % abs(profit / loss))
         print("Max Drawdown %.2f%%" % data["metrics"]["max_drawdown"]["value"])
+
 
 if __name__ == "__main__":
     main()

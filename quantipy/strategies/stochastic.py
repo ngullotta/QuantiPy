@@ -4,8 +4,8 @@ from pandas import Series
 from ta.momentum import RSIIndicator, StochRSIIndicator
 from ta.trend import MACD
 
-from quantipy.strategies.simple import SimpleStrategy, event
 from quantipy.strategies.advanced import AdvancedStrategy, Position, TradeState
+from quantipy.strategies.simple import SimpleStrategy, event
 
 
 class AdvancedHarmonicOscillators(AdvancedStrategy):
