@@ -31,9 +31,6 @@ class StrategyBase(Strategy):
     def __init__(self, exchange: Exchange) -> None:
         self.logger.info("Using strategy: %s", self.__class__.__name__)
         super().__init__(exchange)
-        self.interface: ExchangeInterface = exchange.interface
-        self.preferences = self.interface.user_preferences
-        self.settings = self.preferences.get("settings", {})
         self._audit = defaultdict(list)
 
     @classmethod
