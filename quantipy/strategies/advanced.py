@@ -67,7 +67,7 @@ class TradeManager:
             int(data["created_at"]),
             data["side"],
             data["size"],
-            data["symbol"]
+            data["symbol"],
         )
 
     def log_order(self, order: MarketOrder) -> None:
