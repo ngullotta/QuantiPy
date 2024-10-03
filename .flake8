@@ -11,4 +11,5 @@ exclude =
     old,
     build,
     dist
+    tests
 max-complexity = 10
