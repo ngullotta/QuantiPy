@@ -1,11 +1,10 @@
-import logging
 import inspect
+import logging
 from collections import defaultdict
 from typing import Callable, Deque, Dict, List, Union
 
 from blankly import Strategy
 from blankly.exchanges.exchange import Exchange
-from blankly.exchanges.interfaces.exchange_interface import ExchangeInterface
 
 Callback = Callable[..., None]
 EventCallbacks = Dict[str, List[Callback]]
@@ -32,7 +31,34 @@ class StrategyBase(Strategy):
     def __init__(self, exchange: Exchange) -> None:
         self.logger.info("Using strategy: %s", self.__class__.__name__)
         super().__init__(exchange)
+        self._clean_callbacks()
         self._audit = defaultdict(list)
+
+    def _clean_callbacks(self) -> None:
+        # This is the worst thing I've ever written
+        # We only want registered callbacks of *this* class and its
+        # parent classes as well to be able to be called back.
+        # But because I'm a fuckup I made all callbacks register
+        # regardless at instantiation time.
+        # Why did I use @event decorators with class variables :^)
+        # @ToDo -> Fix this nonsense
+        allowed_classes = [
+            base.__name__ for base in inspect.getmro(self.__class__)
+        ]
+        to_delete: dict = defaultdict(list)
+        for _type, callbacks in self.callbacks.items():
+            for callback in callbacks:
+                if callback.__qualname__.split(".")[0] not in allowed_classes:
+                    to_delete[_type].append(callback)
+
+        for _type, callbacks in to_delete.items():
+            for callback in callbacks:
+                self.logger.debug(
+                    "Removing function `%s` from callbacks",
+                    callback.__qualname__,
+                )
+                index = self.callbacks[_type].index(callback)
+                del self.callbacks[_type][index]
 
     @classmethod
     def register_event_callback(cls, event: str, callback: Callback) -> bool:
@@ -41,19 +67,8 @@ class StrategyBase(Strategy):
         return callback in cls.callbacks[event]
 
     def run_callbacks(self, _type: str, *args, **kwargs) -> None:
-        # This is the worst thing I've ever written
-        # We only want registered callbacks of *this* class and its
-        # parent classes as well to be able to be called back.
-        # But because I'm a fuckup I made all callbacks register
-        # regardless at instantiation time.
-        # Why did I use @event decorators with class variables :^)
-        # @ToDo -> Fix this nonsense
         for fn in self.callbacks[_type]:
-            allowed_classes = [
-                base.__name__ for base in inspect.getmro(self.__class__)
-            ]
-            if fn.__qualname__.split(".")[0] in allowed_classes:
-                fn(self, *args, **kwargs)
+            fn(self, *args, **kwargs)
 
     def buy(self) -> bool:
         return False
