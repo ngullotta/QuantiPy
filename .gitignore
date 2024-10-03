@@ -5,3 +5,4 @@ __pycache__
 !Stoch+RSI+MACD-Backtest.png
 *_results.json
 *_audit.json
+.coverage
