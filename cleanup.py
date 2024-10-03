@@ -11,4 +11,4 @@ if __name__ == "__main__":
 
     # Audit logs
     for _file in Path(".").glob("*_audit.json"):
-        _file.unlink
+        _file.unlink()
