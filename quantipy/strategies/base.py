@@ -43,14 +43,19 @@ class StrategyBase(Strategy):
         return callback in cls.callbacks[event]
 
     def run_callbacks(self, _type: str, *args, **kwargs) -> None:
+        # This is the worst thing I've ever written
+        # We only want registered callbacks of *this* class and its
+        # parent classes as well to be able to be called back.
+        # But because I'm a fuckup I made all callbacks register
+        # regardless at instantiation time.
+        # Why did I use @event decorators with class variables :^)
+        # @ToDo -> Fix this nonsense
         for fn in self.callbacks[_type]:
-            # This is the worst thing I've ever written.
-            # Why did I use @event decorators with class variables :^)
-            if fn.__qualname__.split(".")[0] in [
-                "SimpleStrategy",
-                "AdvancedStrategy",
-                self.__class__.__name__,
-            ]:
+            allowed_classes = [
+                base.__name__ for base in self.__class__.__bases__
+            ]
+            allowed_classes.append(self.__class__.__name__)
+            if fn.__qualname__.split(".")[0] in allowed_classes:
                 fn(self, *args, **kwargs)
 
     def buy(self) -> bool:
