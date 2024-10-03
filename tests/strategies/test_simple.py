@@ -34,4 +34,25 @@ def test_simple_strategy_buy(exchange) -> None:
     settings = Path(__file__).parent / "settings.json"
     st.backtest(to="1d", initial_values={"USD": 500}, GUI_output=False, settings_path=settings)
     assert signal
-    
+
+def test_simple_strategy_sell(exchange) -> None:
+    signal = False
+    def sell(symbol):
+        nonlocal signal
+        if not signal:
+            signal = True
+            return signal
+        return False
+
+    st = SimpleStrategy(exchange)
+    st.sell = sell
+    st.add_price_event(
+        st.tick,
+        symbol="PWT-USD",
+        resolution="1m",
+        init=st.init,
+    )
+    settings = Path(__file__).parent / "settings.json"
+    st.positions["PWT-USD"] = {"open": True}
+    st.backtest(to="1d", initial_values={"PWT": 50, "USD": 0}, GUI_output=False, settings_path=settings)
+    assert signal
