@@ -1,10 +1,18 @@
+import logging
 from logging import Formatter
 
 
 class QuantiPyLogger(Formatter):
-    def format(self, record: str) -> str:
-        log_msg = (
-            f"[{record.levelname}] ({record.module}:{record.funcName}) "
-            f"{record.msg}"
+    __level_to_symbol = {
+        "DEBUG": "+",
+        "INFO": "*",
+        "WARNING": "?",
+        "ERROR": "!",
+        "CRITICAL": "!!",
+    }
+
+    def format(self, record: logging.LogRecord) -> str:
+        symbol = self.__level_to_symbol.get(
+            record.levelname, self.__level_to_symbol.get("DEBUG")
         )
-        return log_msg % record.args
+        return f"[{symbol}] {record.msg}" % record.args
