@@ -1,4 +1,5 @@
 import logging
+import inspect
 from collections import defaultdict
 from typing import Callable, Deque, Dict, List, Union
 
@@ -49,9 +50,8 @@ class StrategyBase(Strategy):
         # @ToDo -> Fix this nonsense
         for fn in self.callbacks[_type]:
             allowed_classes = [
-                base.__name__ for base in self.__class__.__bases__
+                base.__name__ for base in inspect.getmro(self.__class__)
             ]
-            allowed_classes.append(self.__class__.__name__)
             if fn.__qualname__.split(".")[0] in allowed_classes:
                 fn(self, *args, **kwargs)
 
