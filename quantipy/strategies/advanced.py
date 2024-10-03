@@ -1,11 +1,10 @@
 import logging
 import math
 from collections import namedtuple
-from datetime import datetime
 from enum import IntEnum, auto
 from typing import Dict, Union
 
-from blankly import ScreenerState, StrategyState
+from blankly import StrategyState
 from blankly.exchanges.interfaces.exchange_interface import ExchangeInterface
 from blankly.exchanges.orders.market_order import MarketOrder
 from blankly.utils import trunc
@@ -257,7 +256,9 @@ class AdvancedStrategy(SimpleStrategy):
                     stop_loss=price * (1 + self.STOP_LOSS_PCT),
                 )
 
-    def tick(self, price: float, symbol: str, state: StrategyState) -> None:
+    def tick(  # noqa: C901
+        self, price: float, symbol: str, state: StrategyState
+    ) -> None:
         args: tuple = (price, symbol, state)
 
         self.run_callbacks("tick", *args)
