@@ -40,22 +40,20 @@ class SimpleStrategy(StrategyBase):
 
         self.run_callbacks("tick", *args)
 
-        if not self.safe(symbol):
+        if symbol in self.blacklist:
             return
 
-        position: dict = self.positions[symbol]
-        _type: str = position.get("type")
-        _open: bool = position.get("open")
-
-        if _type in ["long"] or _type is None:
-            if _open and self.sell(symbol):
+        # Avoid splits when backtesting
+        if not self.protector.safe(symbol, self.time()):
+            # If we have an open position, exit it immediately
+            if self.positions[symbol].get("open"):
                 self.run_callbacks("sell", *args)
-            elif not _open and self.buy(symbol):
-                self.run_callbacks("buy", *args)
-        elif _type in ["short"]:
-            if _open and self.buy(symbol):
-                self.run_callbacks("buy", *args)
+            return
 
+        if self.positions[symbol].get("open") and self.sell(symbol):
+            self.run_callbacks("sell", *args)
+        elif not self.positions[symbol].get("open") and self.buy(symbol):
+            self.run_callbacks("buy", *args)
 
     @property
     def cash(self) -> float:
@@ -75,10 +73,6 @@ class SimpleStrategy(StrategyBase):
             data["symbol"],
         )
 
-    @staticmethod
-    def clamp(value: float, _max: float, _min: float) -> float:
-        return max(min(value, _max), _min)
-
     def get_quantity(
         self,
         price: float,
@@ -88,15 +82,11 @@ class SimpleStrategy(StrategyBase):
         stop_loss: float = 0.05,
         precision: int = 4,
     ) -> float:
-        if self.positions[symbol].get("open") and not self.positions[symbol].get("type") == "short":
+        if self.positions[symbol].get("open"):
             return trunc(self.account[state.base_asset].available, precision)
         # Risk management I guess?
         # Cash = Risk amount / Stop loss percentage
-        cash = self.clamp(
-            (self.cash * pct) / stop_loss,
-            self.cash,
-            0,
-        )
+        cash = (self.cash * pct) / stop_loss
         return trunc(cash / price, precision)
 
     def order(
@@ -113,7 +103,6 @@ class SimpleStrategy(StrategyBase):
         )
 
         if not quantity:
-            self.logger.warning("Attempted to buy %s quantity 0", symbol)
             return 0.0
 
         # Do the actual order now
@@ -128,11 +117,6 @@ class SimpleStrategy(StrategyBase):
         self.positions[symbol]["open"]: bool = (
             side == "buy" and data["status"] == "done"
         )
-
-        self.positions[symbol]["type"] = "long"
-
-        if self.positions[symbol]["open"]:
-            self.positions[symbol].pop("trailing_stop", None)
 
         self.positions[symbol]["entry"] = price
 
