@@ -28,12 +28,7 @@ class SimpleStrategy(StrategyBase):
             return False
 
         # Avoid splits when backtesting
-        if not self.protector.safe(symbol, self.time()):
-            # If we have an open position, exit it immediately
-            if self.positions[symbol].get("open"):
-                self.run_callbacks("sell", *args)
-            return False
-        return True
+        return self.protector.safe(symbol, self.time())
 
     def tick(self, price: float, symbol: str, state: StrategyState) -> None:
         args: tuple = (price, symbol, state)
@@ -44,7 +39,7 @@ class SimpleStrategy(StrategyBase):
             return
 
         # Avoid splits when backtesting
-        if not self.protector.safe(symbol, self.time()):
+        if not self.safe(symbol):
             # If we have an open position, exit it immediately
             if self.positions[symbol].get("open"):
                 self.run_callbacks("sell", *args)
