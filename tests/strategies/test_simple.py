@@ -24,6 +24,7 @@ def test_simple_strategy_buy(exchange) -> None:
         return False
 
     st = SimpleStrategy(exchange)
+    assert not st.buy()
     st.buy = buy
     st.add_price_event(
         st.tick,
@@ -45,6 +46,7 @@ def test_simple_strategy_sell(exchange) -> None:
         return False
 
     st = SimpleStrategy(exchange)
+    assert not st.sell()
     st.sell = sell
     st.add_price_event(
         st.tick,
