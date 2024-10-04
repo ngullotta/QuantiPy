@@ -9,6 +9,29 @@ from quantipy.strategies.split_protector import SplitProtector
 
 
 class SimpleStrategy(StrategyBase):
+    """
+    A simple strategy base.
+
+    The SimpleStrategy class is a good starting point for basic
+    strategy testing.
+
+    It provides (among other things) basic facilities for:
+      - Initializing symbol data
+      - Appending new price data on each tick
+      - Taking basic long positions
+      - Position state management
+      - Doing risk management calculations for quantities
+      - Handling buy and sell signals
+      - Simple conversion into "screener"
+        - A screener just informs about buy/sell signals on tracked
+        symbols instead of actually handling trades
+      - An audit log to profile the accuracy of your strategy
+      - Protecting against stock splits (when backtesting)
+      - Avoiding blacklisted symbols (niche)
+
+    Things it cannot do:
+      - Short selling
+    """
 
     protector: SplitProtector = SplitProtector("splits.json")
 
@@ -50,14 +73,6 @@ class SimpleStrategy(StrategyBase):
         elif not self.positions[symbol].get("open") and self.buy(symbol):
             self.run_callbacks("buy", *args)
 
-    @property
-    def cash(self) -> float:
-        return self.interface.cash
-
-    @property
-    def account(self) -> dict:
-        return self.interface.account
-
     @staticmethod
     def order_to_str(order: MarketOrder) -> str:
         data: dict = order.get_response()
@@ -78,10 +93,12 @@ class SimpleStrategy(StrategyBase):
         precision: int = 4,
     ) -> float:
         if self.positions[symbol].get("open"):
-            return trunc(self.account[state.base_asset].available, precision)
+            return trunc(
+                state.interface.account[state.base_asset].available, precision
+            )
         # Risk management I guess?
         # Cash = Risk amount / Stop loss percentage
-        cash = (self.cash * pct) / stop_loss
+        cash = (state.interface.cash * pct) / stop_loss
         return trunc(cash / price, precision)
 
     def order(
@@ -135,4 +152,4 @@ class SimpleStrategy(StrategyBase):
 
         obj.update(**kwargs)
 
-        self._audit[symbol].append(obj)
+        # self._audit[symbol].append(obj)

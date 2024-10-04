@@ -1,15 +1,18 @@
 import inspect
 import logging
 from collections import defaultdict
-from typing import Callable, Deque, Dict, List, Union
+from typing import List
 
 from blankly import Strategy
 from blankly.exchanges.exchange import Exchange
 
-Callback = Callable[..., None]
-EventCallbacks = Dict[str, List[Callback]]
-HistoricalData = Dict[str, Dict[str, Deque]]
-Positions = Dict[str, Dict[str, Union[bool, float]]]
+from quantipy.types import (
+    Callable,
+    Callback,
+    EventCallbacks,
+    HistoricalData,
+    Positions,
+)
 
 
 def event(event: str) -> Callable:
@@ -21,6 +24,17 @@ def event(event: str) -> Callable:
 
 
 class StrategyBase(Strategy):
+    """
+    The base for all QuantiPy strategies.
+
+    The goal of this base is to provide a callback system and registry
+    (using the `event` decorator) to allow for quick subclass building.
+    All event callbacks are registered in `callbacks`.
+
+    This class also initializes the base `Strategy` class from blankly,
+    the logger, position information, symbol blacklist, and symbol
+    data.
+    """
 
     logger: logging.RootLogger = logging.getLogger()
     data: HistoricalData = defaultdict(dict)
@@ -29,10 +43,8 @@ class StrategyBase(Strategy):
     blacklist: List[str] = []
 
     def __init__(self, exchange: Exchange) -> None:
-        self.logger.info("Using strategy: %s", self.__class__.__name__)
         super().__init__(exchange)
         self._clean_callbacks()
-        self._audit = defaultdict(list)
 
     def _clean_callbacks(self) -> None:
         # This is the worst thing I've ever written
@@ -42,7 +54,7 @@ class StrategyBase(Strategy):
         # regardless at instantiation time.
         # Why did I use @event decorators with class variables :^)
         # @ToDo -> Fix this nonsense
-        allowed_classes = [
+        allowed_classes: List[str] = [
             base.__name__ for base in inspect.getmro(self.__class__)
         ]
         to_delete: dict = defaultdict(list)
@@ -57,7 +69,7 @@ class StrategyBase(Strategy):
                     "Removing function `%s` from callbacks",
                     callback.__qualname__,
                 )
-                index = self.callbacks[_type].index(callback)
+                index: int = self.callbacks[_type].index(callback)
                 del self.callbacks[_type][index]
 
     @classmethod

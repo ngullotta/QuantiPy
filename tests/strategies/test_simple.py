@@ -1,21 +1,32 @@
 from pathlib import Path
 
 import pytest
+from pandas import read_csv
 from blankly import KeylessExchange
 from blankly.data.data_reader import PriceReader
 
 from quantipy.strategies.simple import SimpleStrategy
 
 
+def get_one_day_start_end(path: Path) -> tuple:
+    data = read_csv(path)
+    end = int(data["time"].iloc[-1])
+    return end - 86400, end
+
+
 @pytest.fixture(scope="module", autouse=True)
-def exchange() -> None:
-    data = Path(__file__).parent / "data" / "pine_wave_technologies.csv"
+def data_path() -> Path:
+    yield Path(__file__).parent / "data" / "pine_wave_technologies.csv"
+
+
+@pytest.fixture(scope="module", autouse=True)
+def exchange(data_path) -> None:
     yield KeylessExchange(
-        price_reader=PriceReader(str(data.resolve()), "PWT-USD")
+        price_reader=PriceReader(str(data_path.resolve()), "PWT-USD")
     )
 
 
-def test_simple_strategy_buy(exchange) -> None:
+def test_simple_strategy_buy(data_path, exchange) -> None:
     signal = False
 
     def buy(symbol):
@@ -35,8 +46,10 @@ def test_simple_strategy_buy(exchange) -> None:
         init=st.init,
     )
     settings = Path(__file__).parent / "settings.json"
+    start, end = get_one_day_start_end(data_path)
     st.backtest(
-        to="1d",
+        start_date=start,
+        end_date=end,
         initial_values={"USD": 500},
         GUI_output=False,
         settings_path=settings,
@@ -44,7 +57,7 @@ def test_simple_strategy_buy(exchange) -> None:
     assert signal
 
 
-def test_simple_strategy_sell(exchange) -> None:
+def test_simple_strategy_sell(data_path, exchange) -> None:
     signal = False
 
     def sell(symbol):
@@ -65,8 +78,10 @@ def test_simple_strategy_sell(exchange) -> None:
     )
     settings = Path(__file__).parent / "settings.json"
     st.positions["PWT-USD"] = {"open": True}
+    start, end = get_one_day_start_end(data_path)
     st.backtest(
-        to="1d",
+        start_date=start,
+        end_date=end,
         initial_values={"PWT": 50, "USD": 0},
         GUI_output=False,
         settings_path=settings,
