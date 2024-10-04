@@ -17,7 +17,10 @@ class MockInterface:
         self.price = 10
 
     def market_order(self, symbol, side, size) -> dict:
-        self.cash -= self.price * size
+        if side == "sell":
+            self.cash += self.price * size
+        else:
+            self.cash -= self.price * size
         order = MarketOrder(
             None,
             {
@@ -48,6 +51,7 @@ class MockState:
 
 def test_trade_manager_order_long():
     state = MockState()
+    cash = state.interface.cash
     manager = TradeManager()
     position = manager.order(state.interface.price, "FOO", state)
     assert position.open
@@ -65,6 +69,9 @@ def test_trade_manager_order_long():
     )
 
     assert manager.state.get(state.base_asset) is position
+
+    assert cash > state.interface.cash
+    assert state.interface.cash == cash - (position.entry * position.size)
 
 
 def test_trade_manager_order_short():
@@ -89,16 +96,23 @@ def test_trade_manager_order_short():
 
     assert manager.state.get(state.base_asset) is position
 
+    # Because this is a short we actually gain money
+    assert cash < state.interface.cash
+    assert state.interface.cash == cash + (position.entry * position.size)
+
+
 
 def test_trade_manager_order_close():
     state = MockState()
     cash = state.interface.cash
     manager = TradeManager()
-    position = manager.close(
-        manager.state.new("FOO", size=1, state=TradeState.LONGING, open=True),
-        state,
-    )
+    pos1 = manager.state.new("FOO", entry=10, size=1, state=TradeState.LONGING, open=True)
+    position = manager.close(pos1, state)
 
     assert not position.open
     assert position.symbol
     assert position.state == TradeState.CLOSED
+
+    # We gain money from a regular sale
+    assert cash < state.interface.cash
+    assert state.interface.cash == cash + (pos1.entry * pos1.size)
