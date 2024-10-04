@@ -2,11 +2,29 @@ import logging
 from collections import defaultdict
 from typing import Union
 
-from blankly import StrategyState, trunc
+from blankly import StrategyState
 from blankly.exchanges.orders.market_order import MarketOrder
+from blankly.utils import trunc
+from blankly.utils.exceptions import InvalidOrder
 
 from quantipy.state import TradeState
 from quantipy.types import Position, Positions
+
+
+class PositionStateManager:
+    def __init__(self) -> None:
+        self.positions: Positions = defaultdict(dict)
+
+    def new(self, symbol: str, **kwargs) -> Position:
+        self.delete(symbol)
+        self.positions[symbol] = Position(symbol=symbol, **kwargs)
+        return self.positions[symbol]
+
+    def delete(self, symbol: str) -> None:
+        self.positions.pop(symbol, None)
+
+    def get(self, symbol: str) -> Union[Position, None]:
+        return self.positions.get(symbol)
 
 
 class TradeManager:
@@ -17,77 +35,128 @@ class TradeManager:
 
     logger = logging.getLogger("TradeManager")
 
-    def __init__(self) -> None:
-        self.positions: Positions = defaultdict(dict)
-
-    def get_position(self, symbol: str) -> Union[Position, None]:
-        return self.positions.get(symbol)
-
-    def new_position(self, symbol: str, **kwargs) -> Position:
-        self.positions.pop(symbol, None)
-        self.positions[symbol] = Position(**kwargs)
-        return self.positions[symbol]
-
-    def update_position(self, symbol: str, **kwargs) -> Position:
-        if pos := self.positions.get(symbol):
-            self.positions[symbol] = pos._replace(**kwargs)
-            return self.positions[symbol]
-        return self.new_position(symbol, **kwargs)
+    def __init__(
+        self, default_stop_loss_pct: float = 0.05, default_risk_ratio: int = 2
+    ) -> None:
+        self.default_stop_loss_pct = default_stop_loss_pct
+        self.default_risk_ratio = default_risk_ratio
+        self.state: PositionStateManager = PositionStateManager()
 
     @staticmethod
     def clamp(value: float, _max: float, _min: float) -> float:
         return max(min(value, _max), _min)
 
-    @staticmethod
-    def _order_to_str(order: MarketOrder) -> str:
-        data: dict = order.get_response()
-        return "(%s) [%s] %.8f of -> %s" % (
-            int(data["created_at"]),
-            data["side"],
-            data["size"],
-            data["symbol"],
-        )
+    def quantity(
+        self,
+        price: float,
+        state: StrategyState,
+        percent: float = 0.03,
+        precision: int = 4,
+    ) -> float:
+        """
+        This function determines how many units of the symbol we should
+        buy/sell using our current available funds from
+        `state.interface.cash`. Note that this only works for *new*
+        positions. Old positions that are still open should instead use
+        `TradeManager.close` to close that position.
 
-    def log_order(self, order: MarketOrder) -> None:
-        self.logger.info(self._order_to_str(order))
+        The total quantity is also truncated (rounded) to `precision`
+        size.
 
-    def get_quantity(
+        This works for longs and shorts as well.
+
+        The units are calculated using risk management calculations
+        that take into account your stop loss and the percent of your
+        total cash you want to risk.
+
+        e.g:
+        Cash balance: $1000
+        Percent of cash balance: 3%
+        Stop Loss Percent: 5%
+        Unit Price: $10
+
+        total cash to spend ~> (1000 * 0.03) / 0.05 = 30 / 0.05 = $600
+        quantity ~> $600 / $10 = 60 units of symbol
+
+        Note that any attempt to make the percent of cash greater than
+        the stop loss percent will be "clamped" to be no more than the
+        full cash balance.
+        """
+        balance: float = state.interface.cash
+        cash: float = (balance * percent) / self.default_stop_loss_pct
+        total: float = self.clamp(cash, balance, 1)
+        return trunc(total / price, precision)
+
+    def _order(
+        self, symbol: str, side: str, size: float, state: StrategyState
+    ) -> MarketOrder:
+        rv = MarketOrder(None, {}, state)
+        if not size:
+            self.logger.error(
+                "Attempted to %s invalid size of %s -> quantity %f",
+                side,
+                symbol,
+                size,
+            )
+            return rv
+
+        try:
+            rv = state.interface.market_order(symbol, side=side, size=size)
+        except InvalidOrder as ex:
+            self.logger.error(ex)
+
+        return rv
+
+    def long(
         self,
         price: float,
         symbol: str,
         state: StrategyState,
-        pct: float = 0.01,
-        stop_loss: float = 0.05,
-        precision: int = 4,
-    ) -> float:
-        pos: Position = self.get_position(state.base_asset)
-        base: dict = state.interface.account[state.base_asset]
-
-        # This must just be a regular "long" market order. Calculate
-        # the quantity using `Cash = Risk amount / Stop loss percentage`
-        if pos is None or not pos.open:
-            cash: float = self.clamp(
-                (state.interface.cash * pct) / stop_loss,
-                state.interface.cash,
-                0,
-            )
-            return trunc(cash / price, precision)
-
-        # We want to buy back the same amount we borrowed
-        if pos.state == TradeState.SHORTING:
-            return abs(base.available)
-
-        # Otherwise this a regular sell order and we should sell it all
-        return base.available
-
-    def __order_internal(
-        self, symbol: str, side: str, size: float, state: StrategyState
-    ) -> dict:
-        order: MarketOrder = state.interface.market_order(
-            symbol, side=side, size=size
+        percent: float = 0.03,
+    ) -> Position:
+        quantity: float = self.quantity(price, state, percent)
+        order: MarketOrder = self._order(symbol, "buy", quantity, state)
+        return self.state.new(
+            state.base_asset,
+            size=order.get_size(),
+            state=TradeState.LONGING,
+            open=(order.get_side() == "buy" and order.get_status() == "done"),
+            entry=price,
+            stop_loss=price * (1 - self.default_stop_loss_pct),
+            take_profit=price
+            * (1 + (self.default_stop_loss_pct * self.default_risk_ratio)),
         )
-        self.log_order(order)
-        return order.get_response()
+
+    def short(
+        self,
+        price: float,
+        symbol: str,
+        state: StrategyState,
+        percent: float = 0.03,
+    ) -> Position:
+        quantity: float = self.quantity(price, symbol, state, percent=percent)
+        res: dict = self._order(symbol, "sell", quantity, state)
+        return self.state.new(
+            state.base_asset,
+            size=res["size"],
+            state=TradeState.SHORTING,
+            open=(side == "sell" and res["status"] == "done"),
+            entry=price,
+            stop_loss=price * (1 + self.default_stop_loss_pct),
+            take_profit=price
+            * (1 - (self.default_stop_loss_pct * self.default_risk_ratio)),
+        )
+
+    def close(self, position: Position) -> bool:
+        if not position.open:
+            return False
+        quantity: float = position.size
+        if position.state == Trade.LONGING:
+            res: dict = self._order(position.symbol, "sell", quantity, state)
+        elif position.state == TradeState.SHORTING:
+            res: dict = self._order(position.symbol, "buy", quantity, state)
+        # Make this return a dummy position
+        return res["status"] == "done"
 
     def order(
         self,
@@ -95,83 +164,13 @@ class TradeManager:
         symbol: str,
         state: StrategyState,
         side: str = "buy",
-        pct: float = 0.01,
-        stop_loss: float = 0.05,
-        risk_ratio: int = 2,
-    ) -> float:
-        pos: Position = self.get_position(state.base_asset)
-        quantity: float = self.get_quantity(
-            price, symbol, state, pct=pct, stop_loss=stop_loss
-        )
-
-        if not quantity:
-            self.logger.warning(
-                "Attempted to buy invalid quantity %f of %s", quantity, symbol
-            )
-            return 0.0
-
-        if side == "buy":
-            # This is a regular "long" order
-            if pos is None or pos.state == TradeState.READY_NEXT:
-                res: dict = self.__order_internal(
-                    symbol, side, quantity, state
-                )
-                pos: Position = self.new_position(
-                    state.base_asset,
-                    state=TradeState.LONGING,
-                    open=(side == "buy" and res["status"] == "done"),
-                    entry=price,
-                    stop_loss=price * (1 - stop_loss),
-                    take_profit=price * (1 + (stop_loss * risk_ratio)),
-                )
-                self.logger.info("%s", pos)
-                return res["size"]
-
-            # This is a short position buy back now
-            if pos.state == TradeState.SHORTING:
-                res: dict = self.__order_internal(
-                    symbol, side, quantity, state
-                )
-                pos: Position = self.update_position(
-                    state.base_asset,
-                    state=TradeState.READY_NEXT,
-                    open=not (side == "buy" and res["status"] == "done"),
-                    entry=price,
-                    stop_loss=0,
-                    take_profit=0xFFFFFFFF,
-                )
-                self.logger.info("%s", pos)
-                return res["size"]
-        elif side == "sell":
-            # We're going to short this
-            if pos is None or pos.state == TradeState.READY_NEXT:
-                res: dict = self.__order_internal(
-                    symbol, side, quantity, state
-                )
-                pos: Position = self.update_position(
-                    state.base_asset,
-                    state=TradeState.SHORTING,
-                    open=(side == "sell" and res["status"] == "done"),
-                    entry=price,
-                    stop_loss=price * (1 + stop_loss),
-                    take_profit=price * (1 - (stop_loss * risk_ratio)),
-                )
-                self.logger.info("%s", pos)
-                return res["size"]
-
-            # This is a long position, sell the whole smash
-            if pos.state == TradeState.LONGING:
-                res: dict = self.__order_internal(
-                    symbol, side, quantity, state
-                )
-                pos: Position = self.update_position(
-                    state.base_asset,
-                    state=TradeState.READY_NEXT,
-                    open=not (side == "sell" and res["status"] == "done"),
-                    entry=price,
-                    stop_loss=0,
-                    take_profit=0xFFFFFFFF,
-                )
-                self.logger.info("%s", pos)
-                return res["size"]
-        return 0.0
+        percent: float = 0.03,
+    ) -> Position:
+        position: Position = self.state.get(state.base_asset)
+        if position is None or not position.open:
+            if side == "buy":
+                return self.long(price, symbol, state, percent)
+            elif side == "sell":
+                return self.short(price, symbol, state, percent)
+        elif position.open:
+            return self.close(position)

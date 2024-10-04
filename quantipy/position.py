@@ -5,6 +5,14 @@ from quantipy.state import TradeState
 
 Position = namedtuple(
     "Position",
-    field_names=["state", "open", "entry", "stop_loss", "take_profit"],
-    defaults=[TradeState.INITIALIZED, False, 0, -math.inf, math.inf],
+    field_names=[
+        "symbol",
+        "size",
+        "state",
+        "open",
+        "entry",
+        "stop_loss",
+        "take_profit",
+    ],
+    defaults=["N/A", 0, TradeState.INITIALIZED, False, 0, -math.inf, math.inf],
 )

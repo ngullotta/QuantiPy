@@ -6,3 +6,4 @@ class TradeState(IntEnum):
     READY_NEXT = auto()
     SHORTING = auto()
     LONGING = auto()
+    CLOSED = auto()

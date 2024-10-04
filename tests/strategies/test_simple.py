@@ -1,9 +1,9 @@
 from pathlib import Path
 
 import pytest
-from pandas import read_csv
 from blankly import KeylessExchange
 from blankly.data.data_reader import PriceReader
+from pandas import read_csv
 
 from quantipy.strategies.simple import SimpleStrategy
 
