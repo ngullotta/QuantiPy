@@ -5,8 +5,8 @@ import pytest
 from blankly.exchanges.orders.market_order import MarketOrder
 from blankly.exchanges.orders.order import Order
 
-from quantipy.trade import TradeManager
 from quantipy.state import TradeState
+from quantipy.trade import TradeManager
 
 
 class MockInterface:
@@ -66,8 +66,10 @@ def test_trade_manager_order_long():
 
     assert manager.state.get(state.base_asset) is position
 
+
 def test_trade_manager_order_short():
     state = MockState()
+    cash = state.interface.cash
     manager = TradeManager()
     position = manager.order(state.interface.price, "FOO", state, side="sell")
 
@@ -86,3 +88,17 @@ def test_trade_manager_order_short():
     )
 
     assert manager.state.get(state.base_asset) is position
+
+
+def test_trade_manager_order_close():
+    state = MockState()
+    cash = state.interface.cash
+    manager = TradeManager()
+    position = manager.close(
+        manager.state.new("FOO", size=1, state=TradeState.LONGING, open=True),
+        state,
+    )
+
+    assert not position.open
+    assert position.symbol
+    assert position.state == TradeState.CLOSED
