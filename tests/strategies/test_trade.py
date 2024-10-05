@@ -8,6 +8,7 @@ from blankly.utils.exceptions import InvalidOrder
 
 from quantipy.state import TradeState
 from quantipy.trade import TradeManager
+from quantipy.position import Position
 
 
 class MockInterface:
@@ -74,6 +75,18 @@ def test_trade_manager_order_long():
     assert cash > state.interface.cash
     assert state.interface.cash == cash - (position.entry * position.size)
 
+    cash = state.interface.cash
+
+    old_pos = position
+    position = manager.order(state.interface.price, "FOO", state)
+
+    assert not position.open
+    assert position.symbol
+    assert position.state == TradeState.CLOSED
+
+    # We gain money from a regular sale
+    assert cash < state.interface.cash
+    assert state.interface.cash == cash + (old_pos.entry * old_pos.size)
 
 def test_trade_manager_order_short():
     state = MockState()
@@ -129,6 +142,12 @@ def test_trade_manager_order_close():
     assert not position.open
     assert position.symbol
     assert position.state == TradeState.CLOSED
+
+    pos2 = manager.state.new(
+        "FOO", entry=10, size=1, state=TradeState.SHORTING, open=False
+    )
+    position = manager.close(pos2, state)
+    assert position == Position()
 
 
 def test_order_zero_size(caplog) -> None:
