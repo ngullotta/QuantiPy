@@ -134,29 +134,32 @@ class TradeManager:
         state: StrategyState,
         percent: float = 0.03,
     ) -> Position:
-        quantity: float = self.quantity(price, symbol, state, percent=percent)
-        res: dict = self._order(symbol, "sell", quantity, state)
+        quantity: float = self.quantity(price, state, percent)
+        order: MarketOrder = self._order(symbol, "sell", quantity, state)
         return self.state.new(
             state.base_asset,
-            size=res["size"],
+            size=order.get_size(),
             state=TradeState.SHORTING,
-            open=(side == "sell" and res["status"] == "done"),
+            open=(order.get_side() == "sell" and order.get_status() == "done"),
             entry=price,
             stop_loss=price * (1 + self.default_stop_loss_pct),
             take_profit=price
             * (1 - (self.default_stop_loss_pct * self.default_risk_ratio)),
         )
 
-    def close(self, position: Position) -> bool:
+    def close(self, position: Position, state: StrategyState) -> Position:
         if not position.open:
-            return False
+            return Position()
         quantity: float = position.size
-        if position.state == Trade.LONGING:
-            res: dict = self._order(position.symbol, "sell", quantity, state)
+        if position.state == TradeState.LONGING:
+            order: MarketOrder = self._order(
+                position.symbol, "sell", quantity, state
+            )
         elif position.state == TradeState.SHORTING:
-            res: dict = self._order(position.symbol, "buy", quantity, state)
-        # Make this return a dummy position
-        return res["status"] == "done"
+            order: MarketOrder = self._order(
+                position.symbol, "buy", quantity, state
+            )
+        return self.state.new(state.base_asset, state=TradeState.CLOSED)
 
     def order(
         self,
@@ -173,4 +176,4 @@ class TradeManager:
             elif side == "sell":
                 return self.short(price, symbol, state, percent)
         elif position.open:
-            return self.close(position)
+            return self.close(position, state)

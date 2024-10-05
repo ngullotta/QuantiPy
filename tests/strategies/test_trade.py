@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 from blankly.exchanges.orders.market_order import MarketOrder
 from blankly.exchanges.orders.order import Order
+from blankly.utils.exceptions import InvalidOrder
 
 from quantipy.state import TradeState
 from quantipy.trade import TradeManager
@@ -101,12 +102,13 @@ def test_trade_manager_order_short():
     assert state.interface.cash == cash + (position.entry * position.size)
 
 
-
 def test_trade_manager_order_close():
     state = MockState()
     cash = state.interface.cash
     manager = TradeManager()
-    pos1 = manager.state.new("FOO", entry=10, size=1, state=TradeState.LONGING, open=True)
+    pos1 = manager.state.new(
+        "FOO", entry=10, size=1, state=TradeState.LONGING, open=True
+    )
     position = manager.close(pos1, state)
 
     assert not position.open
@@ -116,3 +118,44 @@ def test_trade_manager_order_close():
     # We gain money from a regular sale
     assert cash < state.interface.cash
     assert state.interface.cash == cash + (pos1.entry * pos1.size)
+
+    pos2 = manager.state.new(
+        "FOO", entry=10, size=1, state=TradeState.SHORTING, open=True
+    )
+    position = manager.close(pos2, state)
+    
+    # note no check for cash here because our mock doesn't understand
+    # shorts
+    assert not position.open
+    assert position.symbol
+    assert position.state == TradeState.CLOSED
+
+
+def test_order_zero_size(caplog) -> None:
+    state = MockState()
+    cash = state.interface.cash
+    manager = TradeManager()
+    order = manager._order("FOO", "buy", 0, state)
+    assert order.get_response() == {}
+
+    for record in caplog.records:
+        assert record.levelname == "ERROR"
+        assert record.msg != ""
+
+
+def test_order_invalid(caplog) -> None:
+    state = MockState()
+    cash = state.interface.cash
+    manager = TradeManager()
+
+    msg = "Invalid"
+    def error(*args, **kwargs):
+        nonlocal msg
+        raise InvalidOrder(msg)
+
+    state.interface.market_order = error
+    order = manager._order("FOO", "buy", 1, state)
+    for record in caplog.records:
+        assert record.levelname == "ERROR"
+        assert record.msg.args[0] == msg
+
