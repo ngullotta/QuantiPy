@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import math
 
 import pytest
-from blankly import KeylessExchange
+from blankly import KeylessExchange, StrategyState
 from blankly.data.data_reader import PriceReader
 from pandas import read_csv
 
@@ -180,3 +180,73 @@ def test_simple_get_quantity(exchange) -> None:
     mock.interface.account[symbol].available = how_many
 
     assert st.get_quantity(price, symbol, mock) == how_many
+
+
+def test_simple_order(exchange) -> None:
+    exchange.interface.local_account.override_local_account(
+        {"USD": {"available": 1000}}
+    )
+    st = SimpleStrategy(exchange)
+    symbol = "PWT"
+    price = 42
+    state = StrategyState(st, {}, symbol)
+    cash = state.interface.cash
+
+    def market_order(symbol, side, size) -> MarketOrder:
+        nonlocal price
+        data = {
+            "id": "foo-bar-1234",
+            "price": price,
+            "size": size,
+            "symbol": symbol,
+            "side": "side",
+            "type": "market",
+            "time_in_force": "GTC",
+            "created_at": 42,
+            "status": "done",
+        }
+        state = MagicMock()
+        state.get_exchange_type = lambda: "mock"
+        return MarketOrder(None, data, state)
+
+    state.interface.market_order = market_order
+
+    qty = st.order(price, symbol, state)
+
+    assert qty > 0
+    assert qty == round(((state.interface.cash * 0.01) / 0.05) / price, 4)
+
+
+def test_simple_order_zero(exchange) -> None:
+    exchange.interface.local_account.override_local_account(
+        {"USD": {"available": 0}}
+    )
+    st = SimpleStrategy(exchange)
+    symbol = "PWT"
+    price = 42
+    state = StrategyState(st, {}, symbol)
+    cash = state.interface.cash
+    qty = st.order(price, symbol, state)
+    assert qty == 0
+
+
+def test_audit_log(exchange) -> None:
+    # Stub for now
+    st = SimpleStrategy(exchange)
+    st.audit("FOO", "BAR", "Baz qux quux.")
+
+
+def test_simple_screener(exchange) -> None:
+    st = SimpleStrategy(exchange)
+    symbol = "PWT-USD"
+    state = StrategyState(st, {}, symbol)
+    state.resolution = "1m"
+
+    def buy(*args, **kwargs) -> bool:
+        return True
+
+    st.buy = buy
+
+    res = st.screener(symbol, state)
+
+    assert res == {"buy": True}
