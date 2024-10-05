@@ -37,13 +37,13 @@ class StrategyBase(Strategy):
     """
 
     logger: logging.RootLogger = logging.getLogger()
-    data: HistoricalData = defaultdict(dict)
-    positions: Positions = defaultdict(dict)
     callbacks: EventCallbacks = defaultdict(list)
-    blacklist: List[str] = []
 
     def __init__(self, exchange: Exchange) -> None:
         super().__init__(exchange)
+        self.positions: Positions = defaultdict(dict)
+        self.data: HistoricalData = defaultdict(dict)
+        self.blacklist: List[str] = []
         self._clean_callbacks()
 
     def _clean_callbacks(self) -> None:

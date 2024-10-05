@@ -58,9 +58,6 @@ class SimpleStrategy(StrategyBase):
 
         self.run_callbacks("tick", *args)
 
-        if symbol in self.blacklist:
-            return
-
         # Avoid splits when backtesting
         if not self.safe(symbol):
             # If we have an open position, exit it immediately
