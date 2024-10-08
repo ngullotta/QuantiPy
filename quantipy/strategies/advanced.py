@@ -1,3 +1,5 @@
+from typing import Union
+
 from blankly import StrategyState
 
 from quantipy.position import Position

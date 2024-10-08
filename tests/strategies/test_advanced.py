@@ -8,8 +8,8 @@ from blankly.data.data_reader import PriceReader
 from blankly.exchanges.orders.market_order import MarketOrder
 from pandas import read_csv
 
-from quantipy.state import TradeState
 from quantipy.position import Position
+from quantipy.state import TradeState
 from quantipy.strategies.advanced import AdvancedStrategy
 
 
@@ -75,11 +75,7 @@ def test_simple_strategy_buy_sell_signal(data_path, exchange) -> None:
     st.buy = lambda symbol: False
     st.sell = sell
 
-    st.manager.state.new(
-        "PWT",
-        state=TradeState.CLOSED,
-        open=False
-    )
+    st.manager.state.new("PWT", state=TradeState.CLOSED, open=False)
 
     st.backtest(
         start_date=start,
@@ -212,10 +208,7 @@ def test_advanced_tick_buy(exchange):
 
     def go_long(self, price, symbol, state) -> Position:
         return self.manager.state.new(
-            symbol,
-            entry=price,
-            state=TradeState.LONGING,
-            open=True
+            symbol, entry=price, state=TradeState.LONGING, open=True
         )
 
     st.register_event_callback("buy", go_long)
@@ -229,9 +222,7 @@ def test_advanced_tick_buy(exchange):
 
     st.manager.state.positions.pop(symbol)
     position = st.manager.state.new(
-        symbol, 
-        open=False, 
-        state=TradeState.CLOSED
+        symbol, open=False, state=TradeState.CLOSED
     )
 
     # Position in past, but closed
@@ -241,13 +232,9 @@ def test_advanced_tick_buy(exchange):
     assert position.entry == 42
     assert position.state == TradeState.LONGING
 
-
     # Short buyback
     def close_short(self, price, symbol, state) -> Position:
-        return self.manager.state.new(
-            symbol,
-            state=TradeState.CLOSED
-        )
+        return self.manager.state.new(symbol, state=TradeState.CLOSED)
 
     st.callbacks["buy"] = []
     st.callbacks["tick"] = []
@@ -255,10 +242,7 @@ def test_advanced_tick_buy(exchange):
 
     st.manager.state.positions.pop(symbol)
     position = st.manager.state.new(
-        symbol, 
-        open=True, 
-        state=TradeState.SHORTING,
-        entry=42
+        symbol, open=True, state=TradeState.SHORTING, entry=42
     )
 
     st.tick(42, symbol, state)
@@ -278,18 +262,15 @@ def test_advanced_tick_sell(exchange):
 
     def go_short(self, price, symbol, state) -> Position:
         return self.manager.state.new(
-            symbol,
-            entry=price,
-            state=TradeState.SHORTING,
-            open=True
+            symbol, entry=price, state=TradeState.SHORTING, open=True
         )
 
     st.register_event_callback("sell", go_short)
 
     # Short selling
     position = st.manager.state.new(
-        symbol, 
-        open=False, 
+        symbol,
+        open=False,
         state=TradeState.CLOSED,
     )
     st.tick(42, symbol, state)
@@ -301,10 +282,9 @@ def test_advanced_tick_sell(exchange):
     # Closing a long
     def close_long(self, price, symbol, state) -> Position:
         return self.manager.state.new(
-            symbol,
-            state=TradeState.CLOSED,
-            open=False
+            symbol, state=TradeState.CLOSED, open=False
         )
+
     st.callbacks["sell"] = []
     st.callbacks["tick"] = []
     st.register_event_callback("sell", close_long)
@@ -312,7 +292,7 @@ def test_advanced_tick_sell(exchange):
     position = st.manager.state.new(
         symbol,
         entry=42,
-        open=True, 
+        open=True,
         state=TradeState.LONGING,
     )
     st.tick(42, symbol, state)

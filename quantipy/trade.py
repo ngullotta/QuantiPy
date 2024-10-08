@@ -158,13 +158,9 @@ class TradeManager:
             return Position()
         quantity: float = position.size
         if position.state == TradeState.LONGING:
-            order: MarketOrder = self._order(
-                position.symbol, "sell", quantity, state
-            )
+            self._order(position.symbol, "sell", quantity, state)
         elif position.state == TradeState.SHORTING:
-            order: MarketOrder = self._order(
-                position.symbol, "buy", quantity, state
-            )
+            self._order(position.symbol, "buy", quantity, state)
         return self.state.new(state.base_asset, state=TradeState.CLOSED)
 
     def order(
