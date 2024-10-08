@@ -28,18 +28,12 @@ def test_oversold(exchange) -> None:
 
     data = np.cumsum(np.random.uniform(-1, -0.5, 100))
     _rsi = rsi(data)
-    while _rsi[-1] >= 30:
-        data = np.cumsum(np.random.uniform(-1, -0.5, 100))
-        _rsi = rsi(data)
 
     st.data[symbol]["close"] = list(data)
     assert st.buy(symbol)
 
     data = np.cumsum(np.random.uniform(1, 0.5, 100))
     _rsi = rsi(data)
-    while _rsi[-1] <= 70:
-        data = np.cumsum(np.random.uniform(1, 0.5, 100))
-        _rsi = rsi(data)
 
     st.data[symbol]["close"] = list(data)
     assert st.sell(symbol)
