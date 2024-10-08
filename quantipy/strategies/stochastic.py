@@ -29,7 +29,7 @@ class AdvancedHarmonicOscillators(AdvancedStrategy):
     def b(self, price: float, symbol: str, state: StrategyState) -> float:
         return self.manager.order(
             price,
-            symbol,
+            state.base_asset,
             state,
             side="buy",
             pct=0.03,
@@ -38,11 +38,11 @@ class AdvancedHarmonicOscillators(AdvancedStrategy):
 
     @event("sell")
     def s(self, price: float, symbol: str, state: StrategyState) -> float:
-        pos: Position = self.manager.get(state.base_asset)
+        position: Union[None, Position] = self.manager.state.get(state.base_asset)
 
         # Close our long if applicable
-        if pos is not None and pos.state == TradeState.LONGING:
-            return self.manager.order(price, symbol, state, side="sell")
+        if position is not None and position.state == TradeState.LONGING:
+            return self.manager.close(position, state)
 
         # Open a short
         return self.manager.order(
