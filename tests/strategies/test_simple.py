@@ -110,6 +110,15 @@ def test_simple_avoids_split_times(exchange) -> None:
     ]
     assert not st.safe(symbol)
 
+    st.protector.data[symbol] = [
+        {
+            "start": 0,
+            "end": 1
+        }
+    ]
+
+    assert st.safe(symbol)
+
 
 def test_simple_avoids_on_tick(exchange) -> None:
     st = SimpleStrategy(exchange)
