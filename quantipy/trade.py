@@ -26,6 +26,12 @@ class PositionStateManager:
     def get(self, symbol: str) -> Union[Position, None]:
         return self.positions.get(symbol)
 
+    def set(self, symbol: str, **kwargs) -> Position:
+        if position := self.get(symbol):
+            self.positions[symbol] = position._replace(**kwargs)
+            return self.positions[symbol]
+        return self.new(symbol, **kwargs)
+
 
 class TradeManager:
     """

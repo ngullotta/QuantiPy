@@ -179,3 +179,13 @@ def test_order_invalid(caplog) -> None:
     for record in caplog.records:
         assert record.levelname == "ERROR"
         assert record.msg.args[0] == msg
+
+
+def test_trade_manager_state_set():
+    manager = TradeManager()
+    symbol = "FOO"
+    pos1 = manager.state.set(symbol, entry=42)
+    assert pos1 == Position(symbol, entry=42)
+    pos2 = manager.state.set(symbol, entry=100)
+    assert pos2.entry == 100
+    assert pos1 is not pos2
