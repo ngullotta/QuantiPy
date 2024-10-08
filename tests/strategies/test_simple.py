@@ -250,10 +250,13 @@ def test_simple_screener(exchange) -> None:
 
 def test_on_tick_append(exchange) -> None:
     st = SimpleStrategy(exchange)
+    st.register_event_callback("tick", SimpleStrategy.append_close)
     symbol = "PWT-USD"
     state = StrategyState(st, {}, symbol)
     state.resolution = "1m"
     st.init(symbol, state)
     price = 42
-    st.run_callbacks("tick", price, symbol, state)
+    st.data[symbol]["close"] = [100 for _ in range(100)]
+    args = (price, symbol, state)
+    st.run_callbacks("tick", *args)
     assert st.data[symbol]["close"][-1] == price
