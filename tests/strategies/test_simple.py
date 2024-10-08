@@ -1,15 +1,15 @@
+import math
 from pathlib import Path
 from unittest.mock import MagicMock
-import math
 
 import pytest
 from blankly import KeylessExchange, StrategyState
 from blankly.data.data_reader import PriceReader
+from blankly.exchanges.orders.market_order import MarketOrder
 from pandas import read_csv
 
-from blankly.exchanges.orders.market_order import MarketOrder
-
 from quantipy.strategies.simple import SimpleStrategy
+
 
 def get_one_day_start_end(path: Path) -> tuple:
     data = read_csv(path)
@@ -102,20 +102,10 @@ def test_simple_avoids_blacklist(exchange) -> None:
 def test_simple_avoids_split_times(exchange) -> None:
     st = SimpleStrategy(exchange)
     symbol = "FOO"
-    st.protector.data[symbol] = [
-        {
-            "start": -math.inf,
-            "end": math.inf
-        }
-    ]
+    st.protector.data[symbol] = [{"start": -math.inf, "end": math.inf}]
     assert not st.safe(symbol)
 
-    st.protector.data[symbol] = [
-        {
-            "start": 0,
-            "end": 1
-        }
-    ]
+    st.protector.data[symbol] = [{"start": 0, "end": 1}]
 
     assert st.safe(symbol)
 
@@ -123,17 +113,13 @@ def test_simple_avoids_split_times(exchange) -> None:
 def test_simple_avoids_on_tick(exchange) -> None:
     st = SimpleStrategy(exchange)
     symbol = "FOO"
-    st.protector.data[symbol] = [
-        {
-            "start": -math.inf,
-            "end": math.inf
-        }
-    ]
+    st.protector.data[symbol] = [{"start": -math.inf, "end": math.inf}]
     hit = False
+
     def cb(*args, **kwargs):
         nonlocal hit
         hit = True
-    
+
     st.callbacks["tick"] = []
     st.register_event_callback("sell", cb)
 
@@ -162,12 +148,13 @@ def test_order_to_str(exchange):
     class State:
         def get_exchange_type(self):
             return "mock"
-    
+
     order = MarketOrder(None, data, State())
     string = st.order_to_str(order)
 
     assert data["symbol"] in string
     ### Fill the rest out later
+
 
 def test_simple_get_quantity(exchange) -> None:
     st = SimpleStrategy(exchange)
@@ -259,3 +246,14 @@ def test_simple_screener(exchange) -> None:
     res = st.screener(symbol, state)
 
     assert res == {"buy": True}
+
+
+def test_on_tick_append(exchange) -> None:
+    st = SimpleStrategy(exchange)
+    symbol = "PWT-USD"
+    state = StrategyState(st, {}, symbol)
+    state.resolution = "1m"
+    st.init(symbol, state)
+    price = 42
+    st.run_callbacks("tick", price, symbol, state)
+    assert st.data[symbol]["close"][-1] == price

@@ -6,9 +6,9 @@ from blankly.exchanges.orders.market_order import MarketOrder
 from blankly.exchanges.orders.order import Order
 from blankly.utils.exceptions import InvalidOrder
 
+from quantipy.position import Position
 from quantipy.state import TradeState
 from quantipy.trade import TradeManager
-from quantipy.position import Position
 
 
 class MockInterface:
@@ -88,6 +88,7 @@ def test_trade_manager_order_long():
     assert cash < state.interface.cash
     assert state.interface.cash == cash + (old_pos.entry * old_pos.size)
 
+
 def test_trade_manager_order_short():
     state = MockState()
     cash = state.interface.cash
@@ -136,7 +137,7 @@ def test_trade_manager_order_close():
         "FOO", entry=10, size=1, state=TradeState.SHORTING, open=True
     )
     position = manager.close(pos2, state)
-    
+
     # note no check for cash here because our mock doesn't understand
     # shorts
     assert not position.open
@@ -168,6 +169,7 @@ def test_order_invalid(caplog) -> None:
     manager = TradeManager()
 
     msg = "Invalid"
+
     def error(*args, **kwargs):
         nonlocal msg
         raise InvalidOrder(msg)
@@ -177,4 +179,3 @@ def test_order_invalid(caplog) -> None:
     for record in caplog.records:
         assert record.levelname == "ERROR"
         assert record.msg.args[0] == msg
-

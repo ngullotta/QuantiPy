@@ -37,3 +37,12 @@ def test_oversold(exchange) -> None:
 
     st.data[symbol]["close"] = list(data)
     assert st.sell(symbol)
+
+
+def test_buy_and_sell_fns(exchange) -> None:
+    st = Oversold(exchange)
+    symbol = "PWT-USD"
+    st.order = lambda _, __, ___: 42
+    assert st.b(1, symbol, None) == 42
+    st.order = lambda _, __, ___, side: 42
+    assert st.s(1, symbol, None) == 42
