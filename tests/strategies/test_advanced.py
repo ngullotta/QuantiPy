@@ -72,7 +72,14 @@ def test_simple_strategy_buy_sell_signal(data_path, exchange) -> None:
 
     assert not st.sell()
 
+    st.buy = lambda symbol: False
     st.sell = sell
+
+    st.manager.state.new(
+        "PWT",
+        state=TradeState.CLOSED,
+        open=False
+    )
 
     st.backtest(
         start_date=start,
