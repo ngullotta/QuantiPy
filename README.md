@@ -105,8 +105,9 @@ strategies so simple to implement. It really takes the headache out of it!
 ## @ToDo:
 
 - ~~Add simple conversion to screener via CLI switch~~
-- Tests
+- ~~Tests~~
+  - I wrote these pretty quick, will make them much easier to understand later
 - Add more strategies
 - Much better logging and/or csv output
-- Add stop loss and take profit handlers
-- Improve open_position detection
+- ~~Add stop loss and take profit handlers~~
+- ~~Improve open position detection~~
