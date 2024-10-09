@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
@@ -42,7 +43,9 @@ def test_oversold(exchange) -> None:
 def test_buy_and_sell_fns(exchange) -> None:
     st = Oversold(exchange)
     symbol = "PWT-USD"
-    st.order = lambda _, __, ___: 42
+    st.manager.order = lambda _, __, ___: 42
+    state = MagicMock()
+    state.base_asset = "PWT"
     assert st.b(1, symbol, None) == 42
-    st.order = lambda _, __, ___, side: 42
+    st.manager.order = lambda _, __, ___, side: 42
     assert st.s(1, symbol, None) == 42

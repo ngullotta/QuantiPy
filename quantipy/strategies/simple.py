@@ -1,4 +1,6 @@
 from datetime import datetime
+from collections import defaultdict
+from typing import Union
 
 from blankly import ScreenerState, StrategyState
 from blankly.exchanges.orders.market_order import MarketOrder
@@ -6,6 +8,8 @@ from blankly.utils import trunc
 
 from quantipy.strategies.base import StrategyBase, event
 from quantipy.strategies.split_protector import SplitProtector
+from quantipy.trade import TradeManager
+from quantipy.position import Position
 
 
 class SimpleStrategy(StrategyBase):
@@ -35,6 +39,11 @@ class SimpleStrategy(StrategyBase):
 
     protector: SplitProtector = SplitProtector("splits.json")
 
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.manager = TradeManager()
+        self._audit_log = defaultdict(list)
+
     def init(self, symbol: str, state: StrategyState) -> None:
         self.data[symbol] = state.interface.history(
             symbol, to=800, resolution=state.resolution, return_as="deque"
@@ -58,78 +67,19 @@ class SimpleStrategy(StrategyBase):
 
         self.run_callbacks("tick", *args)
 
-        # Avoid splits when backtesting
+        position: Union[Position, None] = self.manager.state.get(
+            state.base_asset
+        )
+
         if not self.safe(symbol):
-            # If we have an open position, exit it immediately
-            if self.positions[symbol].get("open"):
-                self.run_callbacks("sell", *args)
+            if position is not None and position.open:
+                self.manager.close(position, state)
             return
 
-        if self.positions[symbol].get("open") and self.sell(symbol):
+        if (position is not None and position.open) and self.sell(symbol):
             self.run_callbacks("sell", *args)
-        elif not self.positions[symbol].get("open") and self.buy(symbol):
+        elif (position is None or not position.open) and self.buy(symbol):
             self.run_callbacks("buy", *args)
-
-    @staticmethod
-    def order_to_str(order: MarketOrder) -> str:
-        data: dict = order.get_response()
-        return "(%s) [%s] %.8f of -> %s" % (
-            int(data["created_at"]),
-            data["side"],
-            data["size"],
-            data["symbol"],
-        )
-
-    def get_quantity(
-        self,
-        price: float,
-        symbol: str,
-        state: StrategyState,
-        pct: float = 0.01,
-        stop_loss: float = 0.05,
-        precision: int = 4,
-    ) -> float:
-        if self.positions[symbol].get("open"):
-            return trunc(
-                state.interface.account[state.base_asset].available, precision
-            )
-        # Risk management I guess?
-        # Cash = Risk amount / Stop loss percentage
-        cash = (state.interface.cash * pct) / stop_loss
-        return trunc(cash / price, precision)
-
-    def order(
-        self,
-        price: float,
-        symbol: str,
-        state: StrategyState,
-        side: str = "buy",
-        pct: float = 0.01,
-        stop_loss: float = 0.05,
-    ) -> float:
-        quantity: float = self.get_quantity(
-            price, symbol, state, pct=pct, stop_loss=stop_loss
-        )
-
-        if not quantity:
-            return 0.0
-
-        # Do the actual order now
-        order: MarketOrder = state.interface.market_order(
-            symbol, side=side, size=quantity
-        )
-
-        data: dict = order.get_response()
-        self.logger.info(self.order_to_str(order))
-
-        # Record our new position
-        self.positions[symbol]["open"]: bool = (
-            side == "buy" and data["status"] == "done"
-        )
-
-        self.positions[symbol]["entry"] = price
-
-        return quantity
 
     def screener(self, symbol: str, state: ScreenerState) -> dict:
         self.data[symbol] = state.interface.history(
@@ -149,4 +99,4 @@ class SimpleStrategy(StrategyBase):
 
         obj.update(**kwargs)
 
-        # self._audit[symbol].append(obj)
+        self._audit_log[symbol].append(obj)

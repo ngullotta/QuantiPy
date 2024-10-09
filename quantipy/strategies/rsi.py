@@ -13,11 +13,11 @@ class Oversold(SimpleStrategy):
 
     @event("buy")
     def b(self, price: float, symbol: str, state: StrategyState) -> float:
-        return self.order(price, symbol, state)
+        return self.manager.order(price, symbol, state)
 
     @event("sell")
     def s(self, price: float, symbol: str, state: StrategyState) -> float:
-        return self.order(price, symbol, state, side="sell")
+        return self.manager.order(price, symbol, state, side="sell")
 
     def buy(self, symbol: str) -> bool:
         _rsi: np.array = rsi(self.data[symbol]["close"])

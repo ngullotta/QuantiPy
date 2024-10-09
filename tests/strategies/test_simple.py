@@ -3,7 +3,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-from blankly import KeylessExchange, StrategyState
+from blankly import KeylessExchange, StrategyState, PaperTrade
 from blankly.data.data_reader import PriceReader
 from blankly.exchanges.orders.market_order import MarketOrder
 from pandas import read_csv
@@ -80,7 +80,11 @@ def test_simple_strategy_sell(data_path, exchange) -> None:
         init=st.init,
     )
     settings = Path(__file__).parent / "settings.json"
-    st.positions["PWT-USD"] = {"open": True}
+    st.manager.state.new(
+        "PWT",
+        open=True,
+        entry=42
+    )
     start, end = get_one_day_start_end(data_path)
     st.backtest(
         start_date=start,
@@ -116,7 +120,7 @@ def test_simple_avoids_on_tick(exchange) -> None:
     st.protector.data[symbol] = [{"start": -math.inf, "end": math.inf}]
     hit = False
 
-    def cb(*args, **kwargs):
+    def cb(pos, state):
         nonlocal hit
         hit = True
 
@@ -124,112 +128,25 @@ def test_simple_avoids_on_tick(exchange) -> None:
     st.register_event_callback("sell", cb)
 
     # This will need to change when I shift to trademanager in simple
-    st.positions[symbol] = {"open": True}
+    st.manager.state.new(
+        symbol,
+        open=True,
+        entry=42
+    )
 
-    st.tick(10, symbol, None)
+    state = MagicMock()
+    state.base_asset = symbol
+    st.manager.close = cb
+    st.tick(10, symbol, state)
 
     assert hit
-
-
-def test_order_to_str(exchange):
-    st = SimpleStrategy(exchange)
-    data = {
-        "id": "foo-bar-1234",
-        "price": 42,
-        "size": 1,
-        "symbol": "FOO",
-        "side": "buy",
-        "type": "market",
-        "time_in_force": "GTC",
-        "created_at": 42,
-        "status": "done",
-    }
-
-    class State:
-        def get_exchange_type(self):
-            return "mock"
-
-    order = MarketOrder(None, data, State())
-    string = st.order_to_str(order)
-
-    assert data["symbol"] in string
-    ### Fill the rest out later
-
-
-def test_simple_get_quantity(exchange) -> None:
-    st = SimpleStrategy(exchange)
-    symbol = "FOO"
-    price = 42
-    mock = MagicMock()
-    mock.interface.cash = 1000
-
-    # (state.interface.cash * pct) / stop_loss
-    # default stop_loss = 5%
-    # default pct = 1%
-    # default precision 4
-    qty = st.get_quantity(price, symbol, mock)
-    assert qty == round(((mock.interface.cash * 0.01) / 0.05) / price, 4)
-
-    st.positions[symbol] = {"open": True}
-
-    how_many = 100
-    mock.interface.account[symbol].available = how_many
-
-    assert st.get_quantity(price, symbol, mock) == how_many
-
-
-def test_simple_order(exchange) -> None:
-    exchange.interface.local_account.override_local_account(
-        {"USD": {"available": 1000}}
-    )
-    st = SimpleStrategy(exchange)
-    symbol = "PWT"
-    price = 42
-    state = StrategyState(st, {}, symbol)
-    cash = state.interface.cash
-
-    def market_order(symbol, side, size) -> MarketOrder:
-        nonlocal price
-        data = {
-            "id": "foo-bar-1234",
-            "price": price,
-            "size": size,
-            "symbol": symbol,
-            "side": "side",
-            "type": "market",
-            "time_in_force": "GTC",
-            "created_at": 42,
-            "status": "done",
-        }
-        state = MagicMock()
-        state.get_exchange_type = lambda: "mock"
-        return MarketOrder(None, data, state)
-
-    state.interface.market_order = market_order
-
-    qty = st.order(price, symbol, state)
-
-    assert qty > 0
-    assert qty == round(((state.interface.cash * 0.01) / 0.05) / price, 4)
-
-
-def test_simple_order_zero(exchange) -> None:
-    exchange.interface.local_account.override_local_account(
-        {"USD": {"available": 0}}
-    )
-    st = SimpleStrategy(exchange)
-    symbol = "PWT"
-    price = 42
-    state = StrategyState(st, {}, symbol)
-    cash = state.interface.cash
-    qty = st.order(price, symbol, state)
-    assert qty == 0
 
 
 def test_audit_log(exchange) -> None:
     # Stub for now
     st = SimpleStrategy(exchange)
     st.audit("FOO", "BAR", "Baz qux quux.")
+    assert len(st._audit_log["FOO"]) == 1
 
 
 def test_simple_screener(exchange) -> None:
