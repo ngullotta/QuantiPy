@@ -18,13 +18,17 @@ EXCHANGES = {"Binance": Binance, "PaperTrade": PaperTrade, "Alpaca": Alpaca}
 
 
 def setupLogger() -> None:
-    logger = logging.getLogger()
-    console = logging.StreamHandler()
-    formatter = QuantiPyLogger()
-    console.setFormatter(formatter)
-    console.setLevel(logging.DEBUG)
-    logger.addHandler(console)
-    logger.setLevel(logging.DEBUG)
+    loggers = [logging.getLogger()]
+    loggers.extend(
+        logging.getLogger(name) for name in logging.root.manager.loggerDict
+    )
+    for logger in loggers:
+        console = logging.StreamHandler()
+        formatter = QuantiPyLogger()
+        console.setFormatter(formatter)
+        console.setLevel(logging.DEBUG)
+        logger.addHandler(console)
+        logger.setLevel(logging.DEBUG)
 
 
 def main() -> None:  # noqa: C901
@@ -107,9 +111,7 @@ def main() -> None:  # noqa: C901
         help='Use the strategy in "Screener" mode',
     )
 
-    parser.add_argument(
-        "-l", "--log-level", type=logging.getLogger().setLevel, default="INFO"
-    )
+    parser.add_argument("-l", "--log-level", type=str, default="INFO")
 
     parser.add_argument(
         "-as",
@@ -144,6 +146,13 @@ def main() -> None:  # noqa: C901
         exit()
 
     args = parser.parse_args()
+
+    loggers = [logging.getLogger()]
+    loggers.extend(
+        logging.getLogger(name) for name in logging.root.manager.loggerDict
+    )
+    for logger in loggers:
+        logger.setLevel(args.log_level)
 
     logger = logging.getLogger()
 
