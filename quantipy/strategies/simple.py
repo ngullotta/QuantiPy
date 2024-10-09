@@ -1,15 +1,13 @@
-from datetime import datetime
 from collections import defaultdict
+from datetime import datetime
 from typing import Union
 
 from blankly import ScreenerState, StrategyState
-from blankly.exchanges.orders.market_order import MarketOrder
-from blankly.utils import trunc
 
+from quantipy.position import Position
 from quantipy.strategies.base import StrategyBase, event
 from quantipy.strategies.split_protector import SplitProtector
 from quantipy.trade import TradeManager
-from quantipy.position import Position
 
 
 class SimpleStrategy(StrategyBase):

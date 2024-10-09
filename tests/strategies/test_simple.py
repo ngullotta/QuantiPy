@@ -3,7 +3,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-from blankly import KeylessExchange, StrategyState, PaperTrade
+from blankly import KeylessExchange, PaperTrade, StrategyState
 from blankly.data.data_reader import PriceReader
 from blankly.exchanges.orders.market_order import MarketOrder
 from pandas import read_csv
@@ -80,11 +80,7 @@ def test_simple_strategy_sell(data_path, exchange) -> None:
         init=st.init,
     )
     settings = Path(__file__).parent / "settings.json"
-    st.manager.state.new(
-        "PWT",
-        open=True,
-        entry=42
-    )
+    st.manager.state.new("PWT", open=True, entry=42)
     start, end = get_one_day_start_end(data_path)
     st.backtest(
         start_date=start,
@@ -128,11 +124,7 @@ def test_simple_avoids_on_tick(exchange) -> None:
     st.register_event_callback("sell", cb)
 
     # This will need to change when I shift to trademanager in simple
-    st.manager.state.new(
-        symbol,
-        open=True,
-        entry=42
-    )
+    st.manager.state.new(symbol, open=True, entry=42)
 
     state = MagicMock()
     state.base_asset = symbol
