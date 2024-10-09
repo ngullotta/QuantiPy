@@ -5,12 +5,12 @@ import numpy as np
 import pytest
 from blankly import KeylessExchange, StrategyState
 from blankly.data.data_reader import PriceReader
-from blankly.indicators import rsi
-from pandas import read_csv
+from pandas import Series, read_csv
+from ta.momentum import StochRSIIndicator
 
-from quantipy.strategies.stochastic import AdvancedHarmonicOscillators
 from quantipy.position import Position
 from quantipy.state import TradeState
+from quantipy.strategies.stochastic import AdvancedHarmonicOscillators
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -48,12 +48,7 @@ def test_advanced_harmonic_oscillators(data_path, exchange) -> None:
         settings_path=settings,
     )
 
-    st.manager.state.new(
-        "PWT",
-        entry=400,
-        open=True,
-        state=TradeState.LONGING
-    )
+    st.manager.state.new("PWT", entry=400, open=True, state=TradeState.LONGING)
 
     st.backtest(
         start_date=int(end) - (86400 * 2),
@@ -66,12 +61,7 @@ def test_advanced_harmonic_oscillators(data_path, exchange) -> None:
     st.manager.state.positions.pop("PWT", None)
 
     def _order(
-        price,
-        symbol,
-        state,
-        side="buy",
-        pct=0.03,
-        **kwargs
+        price, symbol, state, side="buy", pct=0.03, **kwargs
     ) -> Position:
         return Position(
             symbol,
@@ -94,12 +84,7 @@ def test_advanced_harmonic_oscillators(data_path, exchange) -> None:
 
     st.manager.state.positions.pop("PWT", None)
 
-    st.manager.state.new(
-        "PWT",
-        entry=400,
-        open=True,
-        state=TradeState.LONGING
-    )
+    st.manager.state.new("PWT", entry=400, open=True, state=TradeState.LONGING)
 
     def close(position, state) -> None:
         nonlocal st
@@ -118,3 +103,16 @@ def test_advanced_harmonic_oscillators(data_path, exchange) -> None:
     st.manager.state.positions.pop("PWT", None)
     state = StrategyState(st, {}, symbol)
     st.s(42, symbol, state)
+
+
+def test_advanced_harmonic_oscillators_inssuficent_data(exchange) -> None:
+    st = AdvancedHarmonicOscillators(exchange)
+    st.callbacks["buy"] = []
+    st.callbacks["sell"] = []
+    symbol = "PWT-USD"
+    st.STRIDE = 0xFFFFFFFFF
+    st.data[symbol]["close"] = list(
+        np.cumsum(np.random.uniform(-1, -0.5, 100))
+    )
+    assert not st.buy(symbol)
+    assert not st.sell(symbol)

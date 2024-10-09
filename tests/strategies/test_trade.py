@@ -156,7 +156,7 @@ def test_order_zero_size(caplog) -> None:
     cash = state.interface.cash
     manager = TradeManager()
     order = manager._order("FOO", "buy", 0, state)
-    assert order.get_response() == {}
+    assert order is None
 
     for record in caplog.records:
         assert record.levelname == "ERROR"

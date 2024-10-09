@@ -29,16 +29,17 @@ class AdvancedHarmonicOscillators(AdvancedStrategy):
     def b(self, price: float, symbol: str, state: StrategyState) -> float:
         return self.manager.order(
             price,
-            state.base_asset,
+            symbol,
             state,
             side="buy",
-            pct=0.03,
-            stop_loss=self.STOP_LOSS_PCT,
+            percent=0.03,
         )
 
     @event("sell")
     def s(self, price: float, symbol: str, state: StrategyState) -> float:
-        position: Union[None, Position] = self.manager.state.get(state.base_asset)
+        position: Union[None, Position] = self.manager.state.get(
+            state.base_asset
+        )
 
         # Close our long if applicable
         if position is not None and position.state == TradeState.LONGING:
@@ -50,14 +51,14 @@ class AdvancedHarmonicOscillators(AdvancedStrategy):
             symbol,
             state,
             side="sell",
-            pct=0.03,
+            percent=0.03,
             stop_loss=self.STOP_LOSS_PCT,
         )
 
     def buy(self, symbol: str) -> bool:  # noqa: C901
         close = Series(self.data[symbol]["close"])
 
-        stoch = StochRSIIndicator(close)
+        stoch = StochRSIIndicator(close, fillna=True)
         stoch_rsi_K: Series = stoch.stochrsi_k() * 100
         stoch_rsi_D: Series = stoch.stochrsi_d() * 100
 
@@ -128,7 +129,7 @@ class AdvancedHarmonicOscillators(AdvancedStrategy):
     def sell(self, symbol: str) -> bool:  # noqa: C901
         close = Series(self.data[symbol]["close"])
 
-        stoch = StochRSIIndicator(close)
+        stoch = StochRSIIndicator(close, fillna=True)
         stoch_rsi_K: Series = stoch.stochrsi_k() * 100
         stoch_rsi_D: Series = stoch.stochrsi_d() * 100
 

@@ -39,7 +39,7 @@ class TradeManager:
     quantity calculations and updating position state
     """
 
-    logger = logging.getLogger("TradeManager")
+    logger = logging.getLogger()
 
     def __init__(
         self, default_stop_loss_pct: float = 0.05, default_risk_ratio: int = 2
@@ -95,8 +95,8 @@ class TradeManager:
 
     def _order(
         self, symbol: str, side: str, size: float, state: StrategyState
-    ) -> MarketOrder:
-        rv = MarketOrder(None, {}, state)
+    ) -> Union[MarketOrder, None]:
+        rv = None
         if not size:
             self.logger.error(
                 "Attempted to %s invalid size of %s -> quantity %f",
@@ -124,13 +124,17 @@ class TradeManager:
         order: MarketOrder = self._order(symbol, "buy", quantity, state)
         return self.state.new(
             state.base_asset,
-            size=order.get_size(),
+            size=state.interface.account[state.base_asset].available,
             state=TradeState.LONGING,
-            open=(order.get_side() == "buy" and order.get_status() == "done"),
+            open=(
+                order.get_side() == "buy"
+                and order.get_status()["status"] == "done"
+            ),
             entry=price,
             stop_loss=price * (1 - self.default_stop_loss_pct),
             take_profit=price
             * (1 + (self.default_stop_loss_pct * self.default_risk_ratio)),
+            full_symbol=order.get_status()["symbol"],
         )
 
     def short(
@@ -144,13 +148,17 @@ class TradeManager:
         order: MarketOrder = self._order(symbol, "sell", quantity, state)
         return self.state.new(
             state.base_asset,
-            size=order.get_size(),
+            size=state.interface.account[state.base_asset].available,
             state=TradeState.SHORTING,
-            open=(order.get_side() == "sell" and order.get_status() == "done"),
+            open=(
+                order.get_side() == "sell"
+                and order.get_status()["status"] == "done"
+            ),
             entry=price,
             stop_loss=price * (1 + self.default_stop_loss_pct),
             take_profit=price
             * (1 - (self.default_stop_loss_pct * self.default_risk_ratio)),
+            full_symbol=order.get_status()["symbol"],
         )
 
     def close(self, position: Position, state: StrategyState) -> Position:
@@ -158,9 +166,9 @@ class TradeManager:
             return Position()
         quantity: float = position.size
         if position.state == TradeState.LONGING:
-            self._order(position.symbol, "sell", quantity, state)
+            self._order(position.full_symbol, "sell", quantity, state)
         elif position.state == TradeState.SHORTING:
-            self._order(position.symbol, "buy", quantity, state)
+            self._order(position.full_symbol, "buy", quantity, state)
         return self.state.new(state.base_asset, state=TradeState.CLOSED)
 
     def order(
