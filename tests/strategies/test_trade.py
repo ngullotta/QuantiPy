@@ -11,6 +11,12 @@ from quantipy.state import TradeState
 from quantipy.trade import TradeManager
 
 
+class AttrDict(dict):
+    def __init__(self, *args, **kwargs):
+        super(AttrDict, self).__init__(*args, **kwargs)
+        self.__dict__ = self
+
+
 class MockInterface:
 
     def __init__(self) -> None:
@@ -38,7 +44,8 @@ class MockInterface:
             },
             MockState(),
         )
-        order.get_status = lambda: "done"
+        self.account[symbol] = AttrDict(available=size)
+        order.get_status = lambda: {"status": "done", "symbol": symbol}
         return order
 
 
