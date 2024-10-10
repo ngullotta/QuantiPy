@@ -152,7 +152,7 @@ class TradeManager:
         order: MarketOrder = self._order(symbol, "sell", quantity, state)
         newpos = self.state.new(
             state.base_asset,
-            size=state.interface.account[state.base_asset].available,
+            size=abs(state.interface.account[state.base_asset].available),
             state=TradeState.SHORTING,
             open=(
                 order.get_side() == "sell"
