@@ -6,7 +6,7 @@
     "websocket_buffer_size": 10000,
     "test_connectivity_on_auth": true,
     "auto_truncate": true,
-    "global_shorting": false,
+    "global_shorting": true,
     "simulate_margin": true,
     "binance_futures": {"cash": "USDT", "margin_type": "USDT-M"},
     "okx": {"cash": "USDT"},
