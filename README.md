@@ -1,3 +1,5 @@
+![CI](https://github.com/ngullotta/QuantiPy/actions/workflows/ci.yaml/badge.svg)
+
 # QuantiPy
 
 QuantiPy is a Python crypto and securities trading bot with various trading
