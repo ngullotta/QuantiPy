@@ -53,8 +53,7 @@ class AdvancedHarmonicOscillators(AdvancedStrategy):
             symbol,
             state,
             side="sell",
-            percent=0.03,
-            stop_loss=self.STOP_LOSS_PCT,
+            percent=0.03
         )
 
     def buy(self, symbol: str) -> bool:  # noqa: C901
