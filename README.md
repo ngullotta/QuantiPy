@@ -16,7 +16,7 @@ As the saying goes: "A fool and his money are soon parted"
 ## Currently supported Strategies
 
 - Stochastic  
-  - `HarmonicOscillators`
+  - `AdvancedHarmonicOscillators` (uses `AdvancedStrategy`)
     - A complex strategy that can detect swings in momentum before the regular 
     indicators. Buy positions are taken up when all of the following criteria are met:
       - The Stochastic RSI %K and %D must have been below 20 in the last 2 periods
@@ -33,7 +33,7 @@ As the saying goes: "A fool and his money are soon parted"
       crossing down etc.
 
 - RSI
-  - `Oversold`
+  - `Oversold` (Uses `SimpleStrategy`)
     - A simple strategy where buy positions are taken up when the RSI is less than 30 
     (indicating the symbol is oversold) and sell positions are taken up when the RSI is 
     above 70 (indicating the symbol is overbought)
@@ -80,15 +80,15 @@ To get started with QuantiPy, follow these steps
 
   Simple backtest of Bitcoin on Binance using the Stochastic + RSI + MACD strategy
   ```bash
-  $ poetry run python run.py HarmonicOscillators Binance --symbol BTC-USDT --backtest
+  $ poetry run python run.py AdvancedHarmonicOscillators Binance --symbol BTC-USDT --backtest
   ```
 
   Strategies are currently built with a "multi-symbol-multi-position" sub-strategy
 
 ### Example strategy backtesting graph
 
-Backtest of `HarmonicOscillators`
-![An example backtest output](./Stoch+RSI+MACD-Backtest.png)
+Backtest of `AdvancedHarmonicOscillators` with Ethereum
+![An example backtest output](./backtest.png)
 
 ## Contributing
 
