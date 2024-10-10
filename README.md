@@ -87,7 +87,7 @@ To get started with QuantiPy, follow these steps
 
 ### Example strategy backtesting graph
 
-Backtest of `AdvancedHarmonicOscillators` with Ethereum
+Backtest of `AdvancedHarmonicOscillators` with Ethereum and Bitcoin
 ![An example backtest output](./backtest.png)
 
 ## Contributing
