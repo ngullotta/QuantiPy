@@ -2,7 +2,7 @@ price_caches
 *.png
 *.html
 __pycache__
-!Stoch+RSI+MACD-Backtest.png
+!backtest.png
 *_results.json
 *_audit.json
 .coverage
