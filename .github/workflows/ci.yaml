@@ -1,3 +1,4 @@
+name: CI
 on:
   push:
     branches:
@@ -33,4 +34,4 @@ jobs:
       - name: Lint
         run: poetry run flake8 --exit-zero
       - name: Test
-        run: poetry run pytest -v
+        run: poetry run pytest -v --cov --cov-report term-missing
