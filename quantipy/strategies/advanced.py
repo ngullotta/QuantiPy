@@ -89,12 +89,8 @@ class AdvancedStrategy(SimpleStrategy):
             state.base_asset
         )
 
-        # Open order for the first time
-        if position is None:
-            if self.buy(symbol):
-                self.run_callbacks("buy", *args)
-        # Last position is closed and we can take a long or short
-        elif not position.open:
+        # No position found, or it's closed
+        if position is None or not position.open:
             if self.buy(symbol):
                 self.run_callbacks("buy", *args)
             elif self.sell(symbol):
@@ -102,8 +98,8 @@ class AdvancedStrategy(SimpleStrategy):
         # Maybe close our long position
         elif position.open and position.state == TradeState.LONGING:
             if self.sell(symbol):
-                self.run_callbacks("sell", *args)
+                self.manager.close(position, state)
         # Maybe close our short
         elif position.open and position.state == TradeState.SHORTING:
             if self.buy(symbol):
-                self.run_callbacks("buy", *args)
+                self.manager.close(position, state)
