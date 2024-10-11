@@ -6,4 +6,4 @@ __pycache__
 *_results.json
 *_audit.json
 .coverage
-*.log
+*.log*
