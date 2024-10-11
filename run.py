@@ -3,6 +3,7 @@ import logging
 import warnings
 from argparse import ArgumentParser
 from datetime import datetime
+from logging.handlers import TimedRotatingFileHandler
 from sys import argv
 
 from blankly import Alpaca, Binance, PaperTrade, Screener, ScreenerState
@@ -22,6 +23,10 @@ def setupLogger() -> None:
     loggers.extend(
         logging.getLogger(name) for name in logging.root.manager.loggerDict
     )
+    fslog = TimedRotatingFileHandler(
+        "strategy.log", when="midnight", backupCount=30
+    )
+    fslog.suffix = "%Y%m%d"
     for logger in loggers:
         logger.propagate = False
         console = logging.StreamHandler()
@@ -29,6 +34,8 @@ def setupLogger() -> None:
         console.setFormatter(formatter)
         console.setLevel(logging.DEBUG)
         logger.addHandler(console)
+        fslog.setFormatter(formatter)
+        logger.addHandler(fslog)
         logger.setLevel(logging.DEBUG)
 
 
