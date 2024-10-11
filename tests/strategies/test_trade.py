@@ -1,6 +1,6 @@
 import time
-from uuid import uuid4
 from unittest.mock import MagicMock
+from uuid import uuid4
 
 import pytest
 from blankly.exchanges.orders.market_order import MarketOrder
@@ -64,8 +64,10 @@ def test_trade_manager_order_long():
     state = MockState()
     cash = state.interface.cash
     manager = TradeManager()
+
     def dummyaudit(*args, **kwargs):
         pass
+
     state.strategy.audit = dummyaudit
     position = manager.order(state.interface.price, "FOO", state)
     assert position.open
@@ -105,8 +107,10 @@ def test_trade_manager_order_short():
     state = MockState()
     cash = state.interface.cash
     manager = TradeManager()
+
     def dummyaudit(*args, **kwargs):
         pass
+
     state.strategy.audit = dummyaudit
     position = manager.order(state.interface.price, "FOO", state, side="sell")
 

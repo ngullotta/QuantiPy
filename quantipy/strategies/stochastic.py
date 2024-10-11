@@ -49,11 +49,7 @@ class AdvancedHarmonicOscillators(AdvancedStrategy):
 
         # Open a short
         return self.manager.order(
-            price,
-            symbol,
-            state,
-            side="sell",
-            percent=0.03
+            price, symbol, state, side="sell", percent=0.03
         )
 
     def buy(self, symbol: str) -> bool:  # noqa: C901
