@@ -23,6 +23,7 @@ def setupLogger() -> None:
         logging.getLogger(name) for name in logging.root.manager.loggerDict
     )
     for logger in loggers:
+        logger.propagate = False
         console = logging.StreamHandler()
         formatter = QuantiPyLogger()
         console.setFormatter(formatter)
