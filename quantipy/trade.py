@@ -139,7 +139,14 @@ class TradeManager:
                 full_symbol=order.get_status()["symbol"],
             )
             state.strategy.audit(
-                event="trade", message="Opened long", **newpos._asdict()
+                event="trade",
+                message="Opened long",
+                symbol=newpos.full_symbol,
+                cash=state.interface.cash,
+                size=newpos.size,
+                entry=newpos.entry,
+                stop_loss=newpos.stop_loss,
+                take_profit=newpos.take_profit,
             )
             self.logger.info(newpos)
         return newpos
@@ -168,7 +175,14 @@ class TradeManager:
                 full_symbol=order.get_status()["symbol"],
             )
             state.strategy.audit(
-                event="trade", message="Opened short", **newpos._asdict()
+                event="trade",
+                message="Opened short",
+                symbol=newpos.full_symbol,
+                cash=state.interface.cash,
+                size=newpos.size,
+                entry=newpos.entry,
+                stop_loss=newpos.stop_loss,
+                take_profit=newpos.take_profit,
             )
             self.logger.info(newpos)
             return newpos
@@ -186,6 +200,14 @@ class TradeManager:
             state.base_asset,
             state=TradeState.CLOSED,
             full_symbol=position.full_symbol,
+        )
+        state.strategy.audit(
+            event="trade",
+            message="Closed position",
+            symbol=newpos.full_symbol,
+            cash=state.interface.cash,
+            size=newpos.size,
+            entry=newpos.entry,
         )
         self.logger.info(newpos)
         return newpos
