@@ -123,22 +123,25 @@ class TradeManager:
         percent: float = 0.03,
     ) -> Position:
         quantity: float = self.quantity(price, state, percent)
-        order: MarketOrder = self._order(symbol, "buy", quantity, state)
-        newpos = self.state.new(
-            state.base_asset,
-            size=state.interface.account[state.base_asset].available,
-            state=TradeState.LONGING,
-            open=(
-                order.get_side() == "buy"
-                and order.get_status()["status"] == "done"
-            ),
-            entry=price,
-            stop_loss=price * (1 - self.default_stop_loss_pct),
-            take_profit=price
-            * (1 + (self.default_stop_loss_pct * self.default_risk_ratio)),
-            full_symbol=order.get_status()["symbol"],
-        )
-        self.logger.info(newpos)
+        if order := self._order(symbol, "buy", quantity, state):
+            newpos = self.state.new(
+                state.base_asset,
+                size=state.interface.account[state.base_asset].available,
+                state=TradeState.LONGING,
+                open=(
+                    order.get_side() == "buy"
+                    and order.get_status()["status"] == "done"
+                ),
+                entry=price,
+                stop_loss=price * (1 - self.default_stop_loss_pct),
+                take_profit=price
+                * (1 + (self.default_stop_loss_pct * self.default_risk_ratio)),
+                full_symbol=order.get_status()["symbol"],
+            )
+            state.strategy.audit(
+                event="trade", message="Opened long", **newpos._asdict()
+            )
+            # self.logger.info(newpos)
         return newpos
 
     def short(
@@ -149,23 +152,27 @@ class TradeManager:
         percent: float = 0.03,
     ) -> Position:
         quantity: float = self.quantity(price, state, percent)
-        order: MarketOrder = self._order(symbol, "sell", quantity, state)
-        newpos = self.state.new(
-            state.base_asset,
-            size=abs(state.interface.account[state.base_asset].available),
-            state=TradeState.SHORTING,
-            open=(
-                order.get_side() == "sell"
-                and order.get_status()["status"] == "done"
-            ),
-            entry=price,
-            stop_loss=price * (1 + self.default_stop_loss_pct),
-            take_profit=price
-            * (1 - (self.default_stop_loss_pct * self.default_risk_ratio)),
-            full_symbol=order.get_status()["symbol"],
-        )
-        self.logger.info(newpos)
-        return newpos
+        if order := self._order(symbol, "sell", quantity, state):
+            newpos = self.state.new(
+                state.base_asset,
+                size=abs(state.interface.account[state.base_asset].available),
+                state=TradeState.SHORTING,
+                open=(
+                    order.get_side() == "sell"
+                    and order.get_status()["status"] == "done"
+                ),
+                entry=price,
+                stop_loss=price * (1 + self.default_stop_loss_pct),
+                take_profit=price
+                * (1 - (self.default_stop_loss_pct * self.default_risk_ratio)),
+                full_symbol=order.get_status()["symbol"],
+            )
+            state.strategy.audit(
+                event="trade", message="Opened long", **newpos._asdict()
+            )
+            # self.logger.info(newpos)
+            return newpos
+        return Position()
 
     def close(self, position: Position, state: StrategyState) -> Position:
         if not position.open:
