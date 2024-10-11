@@ -141,7 +141,7 @@ class TradeManager:
             state.strategy.audit(
                 event="trade", message="Opened long", **newpos._asdict()
             )
-            # self.logger.info(newpos)
+            self.logger.info(newpos)
         return newpos
 
     def short(
@@ -168,9 +168,9 @@ class TradeManager:
                 full_symbol=order.get_status()["symbol"],
             )
             state.strategy.audit(
-                event="trade", message="Opened long", **newpos._asdict()
+                event="trade", message="Opened short", **newpos._asdict()
             )
-            # self.logger.info(newpos)
+            self.logger.info(newpos)
             return newpos
         return Position()
 
