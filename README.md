@@ -1,4 +1,4 @@
-![CI](https://github.com/ngullotta/QuantiPy/actions/workflows/ci.yaml/badge.svg)
+![CI](https://github.com/ngullotta/QuantiPy/actions/workflows/ci.yaml/badge.svg) [![CodeQL](https://github.com/ngullotta/QuantiPy/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/ngullotta/QuantiPy/actions/workflows/github-code-scanning/codeql)
 
 # QuantiPy
 
