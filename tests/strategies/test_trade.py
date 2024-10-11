@@ -1,5 +1,6 @@
 import time
 from uuid import uuid4
+from unittest.mock import MagicMock
 
 import pytest
 from blankly.exchanges.orders.market_order import MarketOrder
@@ -53,6 +54,7 @@ class MockState:
     def __init__(self) -> None:
         self.interface = MockInterface()
         self.base_asset = "FOO"
+        self.strategy = MagicMock()
 
     def get_exchange_type(self) -> str:
         return "mock"
@@ -62,6 +64,9 @@ def test_trade_manager_order_long():
     state = MockState()
     cash = state.interface.cash
     manager = TradeManager()
+    def dummyaudit(*args, **kwargs):
+        pass
+    state.strategy.audit = dummyaudit
     position = manager.order(state.interface.price, "FOO", state)
     assert position.open
     assert position.symbol == "FOO"
@@ -100,6 +105,9 @@ def test_trade_manager_order_short():
     state = MockState()
     cash = state.interface.cash
     manager = TradeManager()
+    def dummyaudit(*args, **kwargs):
+        pass
+    state.strategy.audit = dummyaudit
     position = manager.order(state.interface.price, "FOO", state, side="sell")
 
     assert position.open
