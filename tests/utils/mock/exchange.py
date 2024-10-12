@@ -4,6 +4,7 @@ from time import time
 from typing import Dict, List, Union
 from unittest.mock import MagicMock
 from uuid import uuid4
+from random import choice
 
 import blankly
 from blankly.data.data_reader import PriceReader
@@ -52,7 +53,7 @@ class API(ExchangeInterface):
         data = data.resample(f"{resolution}s").mean()
         data["time"] = data.index.astype(int) // 10**9
         data.reset_index(drop=True, inplace=True)
-        return data
+        return data.fillna(method="ffill")
 
     @property
     def cash(self) -> float:
@@ -80,11 +81,7 @@ class API(ExchangeInterface):
     def get_products(self) -> {}:
         products = []
         for symbol in self._price_data:
-            products.append(
-                {
-                    "symbol": symbol
-                }
-            )
+            products.append({"symbol": symbol})
         return products
 
     def market_order(self, symbol: str, side: str, size: float):
@@ -100,9 +97,9 @@ class API(ExchangeInterface):
                 "time_in_force": "GTC",
                 "type": "Market",
                 "created_at": int(time()),
-                "status": "done"
+                "status": "done",
             },
-            self
+            self,
         )
         self._orders.append(order)
         if side == "sell":
@@ -185,7 +182,8 @@ class API(ExchangeInterface):
         return {"maker_fee_rate": 0, "taker_fee_rate": 0}
 
     def get_price(self, symbol: str, time: Time = None) -> float:
-        return 42.0
+        resolution = list(self._price_data[symbol].keys())[0]
+        return choice(self._price_data[symbol][resolution]["close"])
 
 
 class Mock(Exchange):
