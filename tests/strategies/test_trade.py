@@ -12,62 +12,11 @@ from quantipy.state import TradeState
 from quantipy.trade import TradeManager
 
 
-class AttrDict(dict):
-    def __init__(self, *args, **kwargs):
-        super(AttrDict, self).__init__(*args, **kwargs)
-        self.__dict__ = self
-
-
-class MockInterface:
-
-    def __init__(self) -> None:
-        self.account = {}
-        self.cash = 1000
-        self.price = 10
-
-    def market_order(self, symbol, side, size) -> dict:
-        if side == "sell":
-            self.cash += self.price * size
-        else:
-            self.cash -= self.price * size
-        order = MarketOrder(
-            None,
-            {
-                "id": str(uuid4()),
-                "price": self.price * size,
-                "size": size,
-                "symbol": symbol,
-                "side": side,
-                "type": "market",
-                "time_in_force": "GTC",
-                "created_at": int(time.time()),
-                "status": "done",
-            },
-            MockState(),
-        )
-        self.account[symbol] = AttrDict(available=size)
-        order.get_status = lambda: {"status": "done", "symbol": symbol}
-        return order
-
-
-class MockState:
-    def __init__(self) -> None:
-        self.interface = MockInterface()
-        self.base_asset = "FOO"
-        self.strategy = MagicMock()
-
-    def get_exchange_type(self) -> str:
-        return "mock"
-
-
-def test_trade_manager_order_long():
-    state = MockState()
+def test_trade_manager_order_long(exchange):
+    state = MagicMock()
+    mock.interface = exchange
     cash = state.interface.cash
     manager = TradeManager()
-
-    def dummyaudit(*args, **kwargs):
-        pass
-
     state.strategy.audit = dummyaudit
     position = manager.order(state.interface.price, "FOO", state)
     assert position.open
