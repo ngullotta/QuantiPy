@@ -8,15 +8,14 @@ def test_foo():
         readers=[
             PriceReader(
                 "/home/muto/src/personal/2024/QuantiPy/tests/strategies/data/pine_wave_technologies.csv",
-                "FOO-USDT",
+                "FOO-USD",
             )
         ],
         resolution=1800,
         account={
-            "FOO": {"available": 0},
-            "USDT": {"available": 1000},
-            "USDT": {"available": 1000},
+            "USD": {"available": 1000}
         },
     )
-    res = ex.interface.market_order("FOO-USDT", "buy", 1)
+    res = ex.interface.market_order("FOO-USD", "buy", 1)
+    cash = ex.interface.cash
     pass

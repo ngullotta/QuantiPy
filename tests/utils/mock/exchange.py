@@ -16,7 +16,6 @@ from blankly.exchanges.interfaces.paper_trade.paper_trade_interface import (
 )
 from blankly.exchanges.orders.market_order import MarketOrder
 from blankly.utils.utils import (
-    AttributeDict,
     aggregate_prices_by_resolution,
     extract_price_by_resolution,
     get_base_asset,
@@ -32,10 +31,13 @@ class API(ExchangeInterface):
     def __init__(
         self, readers: List[PriceReader], resolution: int, account: Account
     ) -> None:
+        self._orders = []
         self._account = account
         self._price_data = defaultdict(dict)
         for reader in readers:
             for symbol in reader.data:
+                if symbol not in account:
+                    account[symbol] = {"available": 0}
                 data = self._parse_raw_data(reader, resolution, symbol)
                 self._price_data[symbol][resolution] = data
         super().__init__(self.get_exchange_type(), self)
@@ -47,10 +49,14 @@ class API(ExchangeInterface):
         data = reader.data[symbol]
         data["time"] = to_datetime(data["time"], unit="s")
         data.set_index("time", inplace=True)
-        data = data.resample(f"{resolution}S").mean()
+        data = data.resample(f"{resolution}s").mean()
         data["time"] = data.index.astype(int) // 10**9
         data.reset_index(drop=True, inplace=True)
         return data
+
+    @property
+    def cash(self) -> float:
+        return self.get_account("USD").get("available", 0)
 
     def init_exchange(self):
         pass
@@ -58,9 +64,9 @@ class API(ExchangeInterface):
     def get_exchange_type(self):
         return "mock"
 
-    def get_account(self, symbol: str = None) -> AttributeDict:
-        account = AttributeDict(self._account)
-        if symbol:
+    def get_account(self, symbol: str = None) -> Dict:
+        account = self._account
+        if symbol and symbol in account:
             return account[symbol]
         return account
 
@@ -82,7 +88,36 @@ class API(ExchangeInterface):
         return products
 
     def market_order(self, symbol: str, side: str, size: float):
-        return MarketOrder(None, {}, self)
+        price = self.get_price(symbol)
+        order = MarketOrder(
+            None,
+            {
+                "id": str(uuid4()),
+                "price": price * size,
+                "size": size,
+                "symbol": symbol,
+                "side": side,
+                "time_in_force": "GTC",
+                "type": "Market",
+                "created_at": int(time()),
+                "status": "done"
+            },
+            self
+        )
+        self._orders.append(order)
+        if side == "sell":
+            self._decrement_account_amount(symbol, size)
+            self._increment_account_amount("USD", price * size)
+        elif side == "buy":
+            self._increment_account_amount(symbol, size)
+            self._decrement_account_amount("USD", price * size)
+        return order
+
+    def _decrement_account_amount(self, symbol: str, size: float) -> None:
+        self._account[symbol]["available"] -= size
+
+    def _increment_account_amount(self, symbol: str, size: float) -> None:
+        self._account[symbol]["available"] += size
 
     def take_profit_order(self, symbol: str, price: float, size: float):
         raise NotImplementedError
@@ -96,8 +131,12 @@ class API(ExchangeInterface):
     def cancel_order(self, symbol: str, order_id: str):
         raise NotImplementedError
 
-    def get_open_orders(self, symbol: str = None):
-        raise NotImplementedError
+    def get_open_orders(self, symbol: str = None) -> List[MarketOrder]:
+        if symbol:
+            return list(
+                filter(lambda order: order["symbol"] == symbol), self._orders
+            )
+        return self._orders
 
     def get_order(self, symbol: str, order_id: str):
         raise NotImplementedError
@@ -150,7 +189,6 @@ class API(ExchangeInterface):
 
 
 class Mock(Exchange):
-
     def __init__(
         self,
         readers: List[PriceReader],
@@ -164,18 +202,12 @@ class Mock(Exchange):
         super().construct_interface_and_cache(calls)
         self.interface = calls
 
-    def get_asset_state(self, symbol: str):
-        """
-        Portfolio state is the internal properties for the exchange block.
-        """
+    def get_asset_state(self, symbol: str) -> Account:
         symbol = get_base_asset(symbol)
         account = self.interface.get_account(symbol=symbol)
         return account
 
-    def get_exchange_state(self):
-        """
-        Exchange state is the external properties for the exchange block
-        """
+    def get_exchange_state(self) -> List[Dict]:
         return self.interface.get_products()
 
     def get_direct_calls(self) -> API:
