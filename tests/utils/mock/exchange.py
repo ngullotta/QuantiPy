@@ -16,6 +16,7 @@ from blankly.exchanges.interfaces.paper_trade.paper_trade_interface import (
     PaperTradeInterface,
 )
 from blankly.exchanges.orders.market_order import MarketOrder
+from blankly.utils.exceptions import InvalidOrder
 from blankly.utils.utils import (
     AttributeDict,
     aggregate_prices_by_resolution,
@@ -23,7 +24,6 @@ from blankly.utils.utils import (
     get_base_asset,
     get_quote_asset,
 )
-from blankly.utils.exceptions import InvalidOrder
 from pandas import DataFrame, to_datetime
 
 Account = Dict[str, Dict[str, Dict]]
@@ -55,6 +55,7 @@ class API(ExchangeInterface):
                 self._maybe_initialize_symbol(symbol, starting_currency=1000)
                 data = self._parse_raw_data(reader, resolution, symbol)
                 self._price_data[symbol][resolution] = data
+        self.resolution = resolution
         super().__init__(self.get_exchange_type(), self)
 
     def _maybe_initialize_symbol(
@@ -120,12 +121,14 @@ class API(ExchangeInterface):
     def market_order(self, symbol: str, side: str, size: float):
         price = self.get_price(symbol)
         if not self._can_we_afford_this(symbol, size, price):
-            raise InvalidOrder("""
+            raise InvalidOrder(
+                """
                 You can not afford, 'ford
                 Ford, my diamond sword, sword
                 Even if you could, could
                 I have a patent!
-            """)
+            """
+            )
         base, quote = get_base_asset(symbol), get_quote_asset(symbol)
         data = {
             "id": str(uuid4()),

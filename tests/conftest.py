@@ -25,4 +25,6 @@ def strategy(exchange) -> SimpleStrategy:
 
 @pytest.fixture
 def state(strategy) -> StrategyState:
-    yield StrategyState(strategy, {}, "FOO")
+    yield StrategyState(
+        strategy, {}, "FOO", strategy.interface.interface.resolution
+    )
