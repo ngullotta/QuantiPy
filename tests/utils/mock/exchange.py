@@ -1,10 +1,10 @@
 from collections import defaultdict
 from pathlib import Path
+from random import choice
 from time import time
 from typing import Dict, List, Union
 from unittest.mock import MagicMock
 from uuid import uuid4
-from random import choice
 
 import blankly
 from blankly.data.data_reader import PriceReader
@@ -17,15 +17,30 @@ from blankly.exchanges.interfaces.paper_trade.paper_trade_interface import (
 )
 from blankly.exchanges.orders.market_order import MarketOrder
 from blankly.utils.utils import (
+    AttributeDict,
     aggregate_prices_by_resolution,
     extract_price_by_resolution,
     get_base_asset,
     get_quote_asset,
 )
+from blankly.utils.exceptions import InvalidOrder
 from pandas import DataFrame, to_datetime
 
 Account = Dict[str, Dict[str, Dict]]
 Time = Union[int, float, None]
+
+
+def memoize(func):
+    cache = {}
+
+    def wrapper(*args):
+        if args in cache:
+            return cache[args]
+        result = func(*args)
+        cache[args] = result
+        return result
+
+    return wrapper
 
 
 class API(ExchangeInterface):
@@ -37,11 +52,22 @@ class API(ExchangeInterface):
         self._price_data = defaultdict(dict)
         for reader in readers:
             for symbol in reader.data:
-                if symbol not in account:
-                    account[symbol] = {"available": 0}
+                self._maybe_initialize_symbol(symbol, starting_currency=1000)
                 data = self._parse_raw_data(reader, resolution, symbol)
                 self._price_data[symbol][resolution] = data
         super().__init__(self.get_exchange_type(), self)
+
+    def _maybe_initialize_symbol(
+        self, symbol: str, starting_currency: int = 0
+    ) -> None:
+        base, quote = get_base_asset(symbol), get_quote_asset(symbol)
+        if base not in self._account:
+            self._account[base] = AttributeDict(available=0, hold=0)
+
+        if quote not in self._account:
+            self._account[quote] = AttributeDict(
+                available=starting_currency, hold=0
+            )
 
     @staticmethod
     def _parse_raw_data(
@@ -53,7 +79,14 @@ class API(ExchangeInterface):
         data = data.resample(f"{resolution}s").mean()
         data["time"] = data.index.astype(int) // 10**9
         data.reset_index(drop=True, inplace=True)
-        return data.fillna(method="ffill")
+        return data.ffill()
+
+    def _can_we_afford_this(
+        self, symbol: str, size: float, price: float
+    ) -> bool:
+        base, quote = get_base_asset(symbol), get_quote_asset(symbol)
+        total_cost = size * price
+        return self.account[quote]["available"] > total_cost
 
     @property
     def cash(self) -> float:
@@ -86,28 +119,37 @@ class API(ExchangeInterface):
 
     def market_order(self, symbol: str, side: str, size: float):
         price = self.get_price(symbol)
-        order = MarketOrder(
-            None,
-            {
-                "id": str(uuid4()),
-                "price": price * size,
-                "size": size,
-                "symbol": symbol,
-                "side": side,
-                "time_in_force": "GTC",
-                "type": "Market",
-                "created_at": int(time()),
-                "status": "done",
-            },
-            self,
-        )
+        if not self._can_we_afford_this(symbol, size, price):
+            raise InvalidOrder("""
+                You can not afford, 'ford
+                Ford, my diamond sword, sword
+                Even if you could, could
+                I have a patent!
+            """)
+        base, quote = get_base_asset(symbol), get_quote_asset(symbol)
+        data = {
+            "id": str(uuid4()),
+            "price": price * size,
+            "size": size,
+            "symbol": symbol,
+            "side": side,
+            "time_in_force": "GTC",
+            "type": "Market",
+            "created_at": int(time()),
+            "status": "done",
+        }
+        order = MarketOrder(None, data, self)
+        order.get_status = lambda: data
         self._orders.append(order)
+        total = price * size
         if side == "sell":
-            self._decrement_account_amount(symbol, size)
-            self._increment_account_amount("USD", price * size)
+            if base != quote:
+                self._decrement_account_amount(base, size)
+                self._increment_account_amount(quote, total)
         elif side == "buy":
-            self._increment_account_amount(symbol, size)
-            self._decrement_account_amount("USD", price * size)
+            if base != quote:
+                self._increment_account_amount(base, size)
+                self._decrement_account_amount(quote, total)
         return order
 
     def _decrement_account_amount(self, symbol: str, size: float) -> None:
@@ -181,6 +223,7 @@ class API(ExchangeInterface):
     def get_fees(self) -> dict:
         return {"maker_fee_rate": 0, "taker_fee_rate": 0}
 
+    @memoize
     def get_price(self, symbol: str, time: Time = None) -> float:
         resolution = list(self._price_data[symbol].keys())[0]
         return choice(self._price_data[symbol][resolution]["close"])

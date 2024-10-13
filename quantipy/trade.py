@@ -149,7 +149,8 @@ class TradeManager:
                 take_profit=newpos.take_profit,
             )
             self.logger.info(newpos)
-        return newpos
+            return newpos
+        return Position()
 
     def short(
         self,
