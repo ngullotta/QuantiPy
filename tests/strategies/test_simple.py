@@ -1,63 +1,59 @@
-import math
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-from blankly import KeylessExchange, PaperTrade, StrategyState
-from blankly.data.data_reader import PriceReader
-from blankly.exchanges.orders.market_order import MarketOrder
-from pandas import read_csv
 
 from quantipy.strategies.simple import SimpleStrategy
 
 
-def get_one_day_start_end(path: Path) -> tuple:
-    data = read_csv(path)
-    end = int(data["time"].iloc[-1])
-    return end - 86400, end
+class TestStrategy(SimpleStrategy):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._buy_signal_hit = False
+        self._sell_signal_hit = False
+
+    def reset(self) -> None:
+        self._buy_signal_hit = False
+        self._sell_signal_hit = False
+
+    def buy(self, symbol: str) -> bool:
+        self._buy_signal_hit = True
+        return True
+
+    def sell(self, symbol: str) -> bool:
+        self._sell_signal_hit = True
+        return True
 
 
-@pytest.fixture(scope="module", autouse=True)
-def data_path() -> Path:
-    yield Path(__file__).parent / "data" / "pine_wave_technologies.csv"
+@pytest.fixture
+def settings(tmp_path):
+    CONTENT = "{}"
+    path = tmp_path / "settings.json"
+    path.write_text(CONTENT)
+    yield path
 
 
-@pytest.fixture(scope="module", autouse=True)
-def exchange(data_path) -> None:
-    yield KeylessExchange(
-        price_reader=PriceReader(str(data_path.resolve()), "PWT-USD")
-    )
-
-
-def test_simple_strategy_buy(data_path, exchange) -> None:
-    signal = False
-
-    def buy(symbol):
-        nonlocal signal
-        if not signal:
-            signal = True
-            return signal
-        return False
-
-    st = SimpleStrategy(exchange)
-    assert not st.buy()
-    st.buy = buy
-    st.add_price_event(
-        st.tick,
-        symbol="PWT-USD",
-        resolution="1m",
-        init=st.init,
-    )
-    settings = Path(__file__).parent / "settings.json"
-    start, end = get_one_day_start_end(data_path)
-    st.backtest(
-        start_date=start,
-        end_date=end,
-        initial_values={"USD": 500},
-        GUI_output=False,
-        settings_path=settings,
-    )
-    assert signal
+def test_simple_strategy_buy(exchange, settings):
+    strategy = TestStrategy(exchange)
+    resolution = exchange.interface.resolution
+    for symbol in ["FOO-USD"]:
+        base, quote = symbol.split("-")
+        strategy.add_price_event(
+            strategy.tick,
+            symbol=symbol,
+            resolution=resolution,
+            init=strategy.init,
+        )
+        data = exchange.interface._price_data[symbol][resolution]
+        start, end = data["time"].astype(int).iloc[-2:]
+        strategy.backtest(
+            start_date=start,
+            end_date=end,
+            initial_values={base: 0, quote: 1000},
+            GUI_output=False,
+            settings_path=str(settings.resolve()),
+        )
+        assert strategy._buy_signal_hit
+        strategy.reset()
 
 
 def test_simple_strategy_sell(data_path, exchange) -> None:

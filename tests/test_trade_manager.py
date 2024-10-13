@@ -1,6 +1,6 @@
+from quantipy.position import Position
 from quantipy.state import TradeState
 from quantipy.trade import TradeManager
-from quantipy.position import Position
 
 
 def test_trade_manager_long(state):
@@ -45,7 +45,7 @@ def test_trade_manager_short(state):
 def test_trade_manager_close(state):
     manager = TradeManager()
     symbol = "FOO-USD"
-    base = symbol.split("-")[0]
+    base, _ = symbol.split("-")
     # Price is memoized in this interface
     price = state.interface.get_price("FOO-USD")
     original = manager.state.new(
@@ -70,8 +70,7 @@ def test_trade_manager_close(state):
 def test_manager_order_zero_size(state, caplog) -> None:
     manager = TradeManager()
     symbol = "FOO-USD"
-    base = symbol.split("-")[0]
-    quote = symbol.split("-")[-1]
+    base, quote = symbol.split("-")
     state.interface.account[quote]["available"] = 0
     position = manager.order(42, symbol, state)
     assert position == Position()
