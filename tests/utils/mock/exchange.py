@@ -33,10 +33,10 @@ Time = Union[int, float, None]
 def memoize(func):
     cache = {}
 
-    def wrapper(*args):
+    def wrapper(*args, **kwargs):
         if args in cache:
             return cache[args]
-        result = func(*args)
+        result = func(*args, **kwargs)
         cache[args] = result
         return result
 
@@ -45,7 +45,11 @@ def memoize(func):
 
 class API(ExchangeInterface):
     def __init__(
-        self, readers: List[PriceReader], resolution: int, account: Account
+        self,
+        readers: List[PriceReader],
+        resolution: int,
+        account: Account,
+        settings: Path,
     ) -> None:
         self._orders = []
         self._account = account
@@ -56,7 +60,8 @@ class API(ExchangeInterface):
                 data = self._parse_raw_data(reader, resolution, symbol)
                 self._price_data[symbol][resolution] = data
         self.resolution = resolution
-        super().__init__(self.get_exchange_type(), self)
+        super().__init__(self.get_exchange_type(), self, settings)
+        self._settings_path = str(settings.resolve())
 
     def _maybe_initialize_symbol(
         self, symbol: str, starting_currency: int = 0
@@ -223,13 +228,21 @@ class API(ExchangeInterface):
             "exchange_specific": {},
         }
 
-    def get_fees(self) -> dict:
+    def get_fees(self, symbol: str) -> dict:
         return {"maker_fee_rate": 0, "taker_fee_rate": 0}
 
     @memoize
     def get_price(self, symbol: str, time: Time = None) -> float:
         resolution = list(self._price_data[symbol].keys())[0]
-        return choice(self._price_data[symbol][resolution]["close"])
+        prices = self._price_data[symbol][resolution]["close"]
+        times = self._price_data[symbol][resolution]["time"]
+
+        if time is None:
+            return choice(prices)
+
+        nearest = min(times, key=lambda t: abs(t - time))
+        index = times[times == nearest].index[0]
+        return prices[index]
 
 
 class Mock(Exchange):
@@ -241,8 +254,9 @@ class Mock(Exchange):
         portfolio: str = None,
         settings: Path = None,
     ) -> None:
-        calls = API(readers, resolution, account)
+        calls = API(readers, resolution, account, settings)
         Exchange.__init__(self, calls.get_exchange_type(), portfolio, settings)
+        self._settings_path = str(settings.resolve())
         super().construct_interface_and_cache(calls)
         self.interface = calls
 

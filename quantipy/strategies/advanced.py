@@ -82,12 +82,15 @@ class AdvancedStrategy(SimpleStrategy):
 
         self.run_callbacks("tick", *args)
 
-        if not self.safe(symbol):
-            return
 
         position: Union[Position, None] = self.manager.state.get(
             state.base_asset
         )
+        
+        if not self.safe(symbol):
+            if position is not None and position.open:
+                self.manager.close(position, state)
+            return
 
         # No position found, or it's closed
         if position is None or not position.open:
