@@ -1,21 +1,8 @@
-import math
-from pathlib import Path
-from random import uniform
-from typing import List
-from unittest.mock import MagicMock
-
-import numpy as np
 import pytest
-from blankly import KeylessExchange, StrategyState
-from blankly.data.data_reader import PriceReader
-from pandas import Series, read_csv
-from ta.momentum import RSIIndicator, StochRSIIndicator
-from ta.trend import MACD
+from blankly import StrategyState
 
-from quantipy.position import Position
-from quantipy.state import TradeState
 from quantipy.strategies.stochastic import AdvancedHarmonicOscillators, event
-
+from quantipy.position import Position
 
 # fmt: off
 BUY_DATA = [148.772012725778,127.75644285338879,71.48580326501973,183.5389649265939,17.75500112198094,142.6318888223258,165.68017372943567,147.0243719096652,197.49130248072117,157.08242253125897,126.69844097064676,47.86275740196344,161.33108977612076,111.30549826938017,183.47406260346128,119.26025642503899,79.03173532330977,81.31982748682083,196.9310488675943,132.26261327963087,71.98023770566414,127.8017734341947,40.59298895205494,88.09025628660324,14.858608521042658,193.83394605842307,116.07246032850098,27.34190513356574,59.71622208768774,43.59477794089548,110.7052002466568,143.06591955410875,166.15735291801616,156.98309085205497,81.90560021889513,177.44474205714744,189.58590069738636,115.59246677835522,54.61260689896678,72.74141447153946,169.5208185145544,195.3058583029298,61.686493208169885,118.35268978381343,199.34913168095986,180.49492191303995,43.40378616814278,63.4190916333923,111.82767200232368,51.41947886024478,32.305517355506126,184.45747119516855,151.63603803901418,73.9010345255736,195.19240386291378]
@@ -69,13 +56,6 @@ class TestStrategy(AdvancedHarmonicOscillators):
         return False
 
 
-def make_state(
-    strategy: AdvancedHarmonicOscillators, symbol: str
-) -> StrategyState:
-    resolution = strategy.interface.interface.resolution
-    return StrategyState(strategy, {}, symbol, resolution=resolution)
-
-
 def test_advanced_harmonic_oscillators_buy_signal(exchange):
     strategy = TestStrategy(exchange)
     strategy.enable_buying()
@@ -90,17 +70,3 @@ def test_advanced_harmonic_oscillators_sell_signal(exchange):
     symbol = "FOO-USD"
     strategy.data[symbol]["close"] = SELL_DATA
     assert strategy.sell(symbol)
-
-
-def advanced_harmonic_oscillators_inssuficent_data(exchange):
-    pass
-    # st = AdvancedHarmonicOscillators(exchange)
-    # st.callbacks["buy"] = []
-    # st.callbacks["sell"] = []
-    # symbol = "PWT-USD"
-    # st.STRIDE = 0xFFFFFFFFF
-    # st.data[symbol]["close"] = list(
-    #     np.cumsum(np.random.uniform(-1, -0.5, 100))
-    # )
-    # assert not st.buy(symbol)
-    # assert not st.sell(symbol)
