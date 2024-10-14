@@ -147,16 +147,12 @@ class AdvancedHarmonicOscillators(AdvancedStrategy):
         if not above_80_D[-self.STRIDE :].any():
             return False
 
-        last_k, last_d = None, None
+        last_k, last_d = -1, -1
         both_above_80_occurred = True
         for k, d in zip(
             stoch_rsi_K[-self.STRIDE :], stoch_rsi_D[-self.STRIDE :]
         ):
-            if last_k is None:
-                last_k = k
-            if last_d is None:
-                last_d = d
-            if not (k <= last_k and d <= last_d):
+            if not (k > last_k and d > last_d):
                 both_above_80_occurred = False
                 break
             last_k = k
