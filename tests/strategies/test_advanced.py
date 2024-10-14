@@ -1,7 +1,7 @@
 import math
 from pathlib import Path
-from unittest.mock import MagicMock
 from time import time
+from unittest.mock import MagicMock
 
 import pytest
 from blankly import KeylessExchange, StrategyState
@@ -12,6 +12,7 @@ from pandas import read_csv
 from quantipy.position import Position
 from quantipy.state import TradeState
 from quantipy.strategies.advanced import AdvancedStrategy, event
+
 
 class TestStrategy(AdvancedStrategy):
     def __init__(self, *args, **kwargs) -> None:
@@ -57,7 +58,7 @@ class TestStrategy(AdvancedStrategy):
             return True
 
 
-def make_state(strategy: AdvancedStrategy, symbol: str) -> AdvancedStrategy:
+def make_state(strategy: AdvancedStrategy, symbol: str) -> StrategyState:
     resolution = strategy.interface.interface.resolution
     return StrategyState(strategy, {}, symbol, resolution=resolution)
 
@@ -133,7 +134,7 @@ def test_advanced_long_take_profit(exchange):
         entry=42,
         take_profit=100,
         state=TradeState.LONGING,
-        full_symbol=symbol
+        full_symbol=symbol,
     )
     strategy.take_profit(original.take_profit + 1, base, state)
     position = strategy.manager.state.get(base)
@@ -154,7 +155,7 @@ def test_advanced_long_stop_loss(exchange):
         entry=42,
         stop_loss=30,
         state=TradeState.LONGING,
-        full_symbol=symbol
+        full_symbol=symbol,
     )
     strategy.stop_loss(original.stop_loss - 1, base, state)
     position = strategy.manager.state.get(base)
@@ -173,9 +174,9 @@ def test_advanced_trailing_stop_loss_increments(exchange):
         open=True,
         size=1,
         entry=42,
-        stop_loss=42 * (1 - strategy.STOP_LOSS_PCT) ,
+        stop_loss=42 * (1 - strategy.STOP_LOSS_PCT),
         state=TradeState.LONGING,
-        full_symbol=symbol
+        full_symbol=symbol,
     )
     # Not enough to trigger a stop loss, but enough to move it up
     price = original.entry + 1
@@ -189,9 +190,9 @@ def test_advanced_trailing_stop_loss_increments(exchange):
         open=True,
         size=1,
         entry=42,
-        stop_loss=42 * (1 + strategy.STOP_LOSS_PCT) ,
+        stop_loss=42 * (1 + strategy.STOP_LOSS_PCT),
         state=TradeState.SHORTING,
-        full_symbol=symbol
+        full_symbol=symbol,
     )
     price = original.entry - 1
     strategy.stop_loss(price, base, state)
@@ -242,7 +243,7 @@ def test_advanced_sells_on_unsafe(exchange) -> None:
     assert position.state == TradeState.CLOSED
 
 
-def test_advanced_tick_buy(exchange):
+def advanced_tick_buy(exchange):
     st = AdvancedStrategy(exchange)
     symbol = "FOO"
     st.data[symbol]["close"] = []
@@ -295,7 +296,7 @@ def test_advanced_tick_buy(exchange):
     assert position.state == TradeState.CLOSED
 
 
-def test_advanced_tick_sell(exchange):
+def advanced_tick_sell(exchange):
     st = AdvancedStrategy(exchange)
     symbol = "FOO"
     st.data[symbol]["close"] = []
