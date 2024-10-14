@@ -68,28 +68,6 @@ class TestStrategy(AdvancedHarmonicOscillators):
             return super().sell(symbol)
         return False
 
-    def generate_trending_prices(self, start_price, n, trend_change):
-        prices = [start_price]
-        for i in range(1, n):
-            if i < trend_change:
-                # Simulate an uptrend
-                prices.append(prices[-1] * (1 + np.random.uniform(0, 0.05)))
-            else:
-                # Simulate a downtrend
-                prices.append(prices[-1] * (1 - np.random.uniform(0, 0.05)))
-        return prices
-
-    def gen(self, symbol: str, signal: callable):
-        self.data[symbol]["close"] = self.generate_trending_prices(
-            100, 500, 500 - 20
-        )
-
-        while not signal(symbol):
-            self.data[symbol]["close"] = self.generate_trending_prices(
-                100, self.STRIDE + 50, self.STRIDE
-            )
-        return self.data[symbol]["close"]
-
 
 def make_state(
     strategy: AdvancedHarmonicOscillators, symbol: str
