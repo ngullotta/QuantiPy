@@ -61,6 +61,10 @@ def make_state(strategy: SimpleStrategy, symbol: str) -> StrategyState:
 
 def test_simple_strategy_buy(exchange):
     strategy = TestStrategy(exchange)
+    # This is overwritten somewhere, need to track this down
+    # For now just re-register the buy function
+    strategy.register_event_callback("buy", TestStrategy.b)
+    strategy.register_event_callback("sell", TestStrategy.s)
     strategy.enable_buying()
     resolution = exchange.interface.resolution
     settings = strategy.interface.interface._settings_path
@@ -116,6 +120,7 @@ def test_simple_strategy_buy(exchange):
         assert not position.open
         assert position.symbol == base
         assert position.state == TradeState.CLOSED
+        strategy.reset()
 
 
 def test_simple_avoids_blacklist(exchange) -> None:

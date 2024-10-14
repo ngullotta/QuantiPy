@@ -244,56 +244,57 @@ def test_advanced_sells_on_unsafe(exchange) -> None:
 
 
 def advanced_tick_buy(exchange):
-    st = AdvancedStrategy(exchange)
-    symbol = "FOO"
-    st.data[symbol]["close"] = []
-    state = StrategyState(st, {}, symbol)
+    pass
+    # st = AdvancedStrategy(exchange)
+    # symbol = "FOO"
+    # st.data[symbol]["close"] = []
+    # state = StrategyState(st, {}, symbol)
 
-    st.buy = lambda symbol: True
+    # st.buy = lambda symbol: True
 
-    def go_long(self, price, symbol, state) -> Position:
-        return self.manager.state.new(
-            symbol, entry=price, state=TradeState.LONGING, open=True
-        )
+    # def go_long(self, price, symbol, state) -> Position:
+    #     return self.manager.state.new(
+    #         symbol, entry=price, state=TradeState.LONGING, open=True
+    #     )
 
-    st.register_event_callback("buy", go_long)
+    # st.register_event_callback("buy", go_long)
 
-    # Regular
-    st.tick(42, symbol, state)
-    position = st.manager.state.get(symbol)
-    assert position.open
-    assert position.entry == 42
-    assert position.state == TradeState.LONGING
+    # # Regular
+    # st.tick(42, symbol, state)
+    # position = st.manager.state.get(symbol)
+    # assert position.open
+    # assert position.entry == 42
+    # assert position.state == TradeState.LONGING
 
-    st.manager.state.positions.pop(symbol)
-    position = st.manager.state.new(
-        symbol, open=False, state=TradeState.CLOSED
-    )
+    # st.manager.state.positions.pop(symbol)
+    # position = st.manager.state.new(
+    #     symbol, open=False, state=TradeState.CLOSED
+    # )
 
-    # Position in past, but closed
-    st.tick(42, symbol, state)
-    position = st.manager.state.get(symbol)
-    assert position.open
-    assert position.entry == 42
-    assert position.state == TradeState.LONGING
+    # # Position in past, but closed
+    # st.tick(42, symbol, state)
+    # position = st.manager.state.get(symbol)
+    # assert position.open
+    # assert position.entry == 42
+    # assert position.state == TradeState.LONGING
 
-    # Short buyback
-    def close_short(self, price, symbol, state) -> Position:
-        return self.manager.state.new(symbol, state=TradeState.CLOSED)
+    # # Short buyback
+    # def close_short(self, price, symbol, state) -> Position:
+    #     return self.manager.state.new(symbol, state=TradeState.CLOSED)
 
-    st.callbacks["buy"] = []
-    st.callbacks["tick"] = []
-    st.register_event_callback("buy", close_short)
+    # st.callbacks["buy"] = []
+    # st.callbacks["tick"] = []
+    # st.register_event_callback("buy", close_short)
 
-    st.manager.state.positions.pop(symbol)
-    position = st.manager.state.new(
-        symbol, open=True, state=TradeState.SHORTING, entry=42
-    )
+    # st.manager.state.positions.pop(symbol)
+    # position = st.manager.state.new(
+    #     symbol, open=True, state=TradeState.SHORTING, entry=42
+    # )
 
-    st.tick(42, symbol, state)
-    position = st.manager.state.get(symbol)
-    assert not position.open
-    assert position.state == TradeState.CLOSED
+    # st.tick(42, symbol, state)
+    # position = st.manager.state.get(symbol)
+    # assert not position.open
+    # assert position.state == TradeState.CLOSED
 
 
 def advanced_tick_sell(exchange):

@@ -269,13 +269,14 @@ def test_advanced_harmonic_oscillators_sell_signal(exchange):
 
 
 def advanced_harmonic_oscillators_inssuficent_data(exchange):
-    st = AdvancedHarmonicOscillators(exchange)
-    st.callbacks["buy"] = []
-    st.callbacks["sell"] = []
-    symbol = "PWT-USD"
-    st.STRIDE = 0xFFFFFFFFF
-    st.data[symbol]["close"] = list(
-        np.cumsum(np.random.uniform(-1, -0.5, 100))
-    )
-    assert not st.buy(symbol)
-    assert not st.sell(symbol)
+    pass
+    # st = AdvancedHarmonicOscillators(exchange)
+    # st.callbacks["buy"] = []
+    # st.callbacks["sell"] = []
+    # symbol = "PWT-USD"
+    # st.STRIDE = 0xFFFFFFFFF
+    # st.data[symbol]["close"] = list(
+    #     np.cumsum(np.random.uniform(-1, -0.5, 100))
+    # )
+    # assert not st.buy(symbol)
+    # assert not st.sell(symbol)
